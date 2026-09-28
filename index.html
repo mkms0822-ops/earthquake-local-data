@@ -3,116 +3,246 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>地震マッピングツール 2026</title>
+    <title>全国内陸地震マップ 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
         body { background: #f5f5f5; }
         
-        .container { display: flex; height: 100vh; }
+        .app { display: flex; height: 100vh; }
+        .app.dark { background: #1a1a1a; color: #fff; }
+        
+        .header { background: white; padding: 12px 16px; border-bottom: 1px solid #ddd; position: sticky; top: 0; z-index: 10; }
+        .dark .header { background: #2d2d2d; border-color: #444; }
+        .header h1 { font-size: 18px; margin-bottom: 10px; }
+        
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filter-grp { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+        .filter-select, .filter-input { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; background: white; }
+        .dark .filter-select, .dark .filter-input { background: #3d3d3d; border-color: #555; color: white; }
+        
+        .btn-filter { padding: 6px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        .btn-filter:hover { background: #1976D2; }
+        .btn-dark { background: #666; padding: 6px 10px; }
+        
+        .container { display: flex; flex: 1; overflow: hidden; }
         .map-panel { flex: 1; position: relative; }
-        .info-panel { width: 380px; background: white; border-left: 1px solid #ddd; display: flex; flex-direction: column; }
+        .sidebar { width: 320px; background: white; border-left: 1px solid #ddd; display: flex; flex-direction: column; overflow: hidden; }
+        .dark .sidebar { background: #2d2d2d; border-left-color: #444; }
         
         #map { width: 100%; height: 100%; }
         
-        .header { background: white; padding: 16px; border-bottom: 1px solid #ddd; }
-        .header h1 { font-size: 18px; margin-bottom: 12px; }
+        .tabs { display: flex; background: white; border-bottom: 1px solid #ddd; }
+        .dark .tabs { background: #2d2d2d; border-bottom-color: #444; }
+        .tab-btn { flex: 1; padding: 10px; background: #f0f0f0; border: none; cursor: pointer; font-size: 12px; font-weight: bold; border-bottom: 2px solid transparent; }
+        .dark .tab-btn { background: #333; color: #aaa; }
+        .tab-btn.active { background: white; color: #2196F3; border-bottom-color: #2196F3; }
+        .dark .tab-btn.active { background: #2d2d2d; color: #4dd0e1; border-bottom-color: #4dd0e1; }
         
-        .controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-        .filter-grp { display: flex; gap: 6px; align-items: center; font-size: 13px; }
-        .filter-grp label { display: flex; align-items: center; gap: 4px; }
-        .filter-grp input[type="checkbox"] { cursor: pointer; }
+        .tab-content { flex: 1; overflow-y: auto; padding: 12px; display: none; }
+        .tab-content.active { display: block; }
         
-        .stats { background: #f9f9f9; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .stat-box { background: #f5f5f5; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+        .dark .stat-box { background: #333; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 12px; margin: 4px 0; }
         .stat-row strong { color: #d32f2f; }
         
-        .earthquakes { flex: 1; overflow-y: auto; padding: 12px; }
-        .eq-item { background: #f5f5f5; border-left: 4px solid #ff6b6b; padding: 10px; margin-bottom: 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
-        .eq-item:hover { background: #efefef; transform: translateX(4px); }
-        .eq-item.active { background: #fff3cd; border-left-color: #ffc107; }
+        .chart-container { position: relative; height: 200px; margin-bottom: 12px; }
         
-        .eq-time { font-size: 12px; color: #666; }
-        .eq-mag { font-size: 14px; font-weight: bold; color: #d32f2f; }
-        .eq-location { font-size: 13px; margin: 4px 0; }
-        .eq-depth { font-size: 12px; color: #999; }
-        
-        .legend { padding: 12px; border-top: 1px solid #ddd; font-size: 12px; }
-        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-        .legend-circle { width: 16px; height: 16px; border-radius: 50%; }
-        .legend-line { width: 20px; height: 2px; }
-        
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal.hidden { display: none; }
-        .modal-box { background: white; padding: 20px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; }
-        .modal-box h2 { margin-bottom: 12px; }
-        .modal-box p { margin-bottom: 8px; font-size: 14px; line-height: 1.6; }
-        .modal-close { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 20px; cursor: pointer; }
-        
-        .dark { background: #1a1a1a; color: white; }
-        .dark .info-panel { background: #2d2d2d; border-left-color: #444; }
-        .dark .header { background: #2d2d2d; border-bottom-color: #444; }
+        .eq-item { background: #f9f9f9; padding: 8px; border-left: 4px solid #FF6B6B; margin-bottom: 6px; border-radius: 3px; cursor: pointer; font-size: 12px; }
         .dark .eq-item { background: #333; }
+        .eq-item:hover { background: #f0f0f0; }
         .dark .eq-item:hover { background: #3a3a3a; }
+        .eq-item.active { background: #fff3cd; border-left-color: #FFC107; }
+        
+        .eq-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .eq-mag { font-weight: bold; color: #d32f2f; font-size: 14px; }
+        .eq-intensity { background: #d32f2f; color: white; padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 11px; }
+        .eq-location { color: #666; font-size: 11px; }
+        .dark .eq-location { color: #aaa; }
+        .eq-detail { color: #999; font-size: 11px; margin-top: 3px; }
+        .dark .eq-detail { color: #888; }
+        
+        .legend { background: #f5f5f5; padding: 10px; border-top: 1px solid #ddd; font-size: 11px; }
+        .dark .legend { background: #333; border-top-color: #444; }
+        .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        
+        .region-tag { display: inline-block; background: #e3f2fd; color: #1976D2; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-right: 4px; }
+        .dark .region-tag { background: #1a237e; color: #4dd0e1; }
+        
+        .env-tag { display: inline-block; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; margin-top: 4px; }
+        .env-urban { background: #ffebee; color: #c62828; }
+        .env-mountain { background: #e8f5e9; color: #2e7d32; }
+        .env-coastal { background: #e0f2f1; color: #00695c; }
+        
+        .lunar-phase { display: inline-block; padding: 4px 8px; background: #f0f0f0; border-radius: 4px; font-size: 12px; font-weight: bold; margin-left: 6px; }
+        .dark .lunar-phase { background: #444; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal.hidden { display: none; }
+        .modal-box { background: white; padding: 20px; border-radius: 8px; max-width: 550px; max-height: 80vh; overflow-y: auto; }
+        .dark .modal-box { background: #2d2d2d; }
+        .modal-close { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 22px; cursor: pointer; }
+        .modal-box h2 { margin-bottom: 12px; font-size: 16px; }
+        .modal-box p { margin-bottom: 8px; font-size: 13px; line-height: 1.6; }
+        
+        .lunar-icon { font-size: 24px; margin: 0 6px; }
+        
+        @media (max-width: 1024px) {
+            .sidebar { width: 280px; }
+            .filters { flex-direction: column; }
+            .filter-select { width: 100%; }
+        }
         
         @media (max-width: 768px) {
             .container { flex-direction: column; }
-            .info-panel { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #ddd; }
+            .sidebar { width: 100%; height: 35vh; border-left: none; border-top: 1px solid #ddd; }
+            .tabs { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="map-panel">
-            <div id="map"></div>
+    <div class="app">
+        <div class="header">
+            <h1>🌍 2026年 全国内陸地震マッピング</h1>
+            <div class="filters">
+                <select id="monthFilter" class="filter-select">
+                    <option value="">月別: すべて</option>
+                    <option value="1">1月</option>
+                    <option value="2">2月</option>
+                    <option value="3">3月</option>
+                    <option value="4">4月</option>
+                    <option value="5">5月</option>
+                    <option value="6">6月</option>
+                    <option value="7">7月</option>
+                    <option value="8">8月</option>
+                    <option value="9">9月</option>
+                    <option value="10">10月</option>
+                    <option value="11">11月</option>
+                    <option value="12">12月</option>
+                </select>
+                <select id="prefFilter" class="filter-select">
+                    <option value="">都道府県: すべて</option>
+                </select>
+                <select id="regionFilter" class="filter-select">
+                    <option value="">地域: すべて</option>
+                    <option value="北海道">北海道</option>
+                    <option value="東北">東北</option>
+                    <option value="関東">関東</option>
+                    <option value="中部">中部</option>
+                    <option value="関西">関西</option>
+                    <option value="中国">中国</option>
+                    <option value="四国">四国</option>
+                    <option value="九州">九州</option>
+                </select>
+                <select id="intensityFilter" class="filter-select">
+                    <option value="">震度: すべて</option>
+                    <option value="1">震度1</option>
+                    <option value="2">震度2</option>
+                    <option value="3">震度3</option>
+                    <option value="4">震度4以上</option>
+                </select>
+                <select id="envFilter" class="filter-select">
+                    <option value="">環境: すべて</option>
+                    <option value="都市部">都市部</option>
+                    <option value="山間部">山間部</option>
+                    <option value="海岸部">海岸部</option>
+                </select>
+                <button class="btn-filter" id="applyFilter">フィルタ適用</button>
+                <button class="btn-filter btn-dark" id="darkBtn">🌙</button>
+            </div>
         </div>
         
-        <div class="info-panel">
-            <div class="header">
-                <h1>📊 2026年 地震データ</h1>
-                <div class="controls">
-                    <div class="filter-grp">
-                        <label><input type="checkbox" id="filter_fault" checked> 断層表示</label>
-                        <label><input type="checkbox" id="filter_epi" checked> 震源地</label>
-                    </div>
-                </div>
-                <div class="stats">
-                    <div class="stat-row">
-                        <span>🔍 検出地震数:</span>
-                        <strong id="stat_count">0</strong>
-                    </div>
-                    <div class="stat-row">
-                        <span>📍 最大震度:</span>
-                        <strong id="stat_max">-</strong>
-                    </div>
-                    <div class="stat-row">
-                        <span>📈 平均M:</span>
-                        <strong id="stat_avg">-</strong>
-                    </div>
-                </div>
+        <div class="container">
+            <div class="map-panel">
+                <div id="map"></div>
             </div>
             
-            <div class="earthquakes" id="earthquakes"></div>
-            
-            <div class="legend">
-                <strong>凡例</strong><br>
-                <div class="legend-item">
-                    <div class="legend-circle" style="background: #4CAF50; width: 12px; height: 12px;"></div>
-                    <span>M2.0-3.0</span>
+            <div class="sidebar">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="earthquakes">地震一覧</button>
+                    <button class="tab-btn" data-tab="stats">統計</button>
+                    <button class="tab-btn" data-tab="analysis">分析</button>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-circle" style="background: #FFC107; width: 14px; height: 14px;"></div>
-                    <span>M3.0-4.0</span>
+                
+                <!-- 地震一覧タブ -->
+                <div class="tab-content active" id="earthquakes">
+                    <div id="eqList"></div>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-circle" style="background: #FF5722; width: 16px; height: 16px;"></div>
-                    <span>M4.0+</span>
+                
+                <!-- 統計タブ -->
+                <div class="tab-content" id="stats">
+                    <div class="stat-box">
+                        <div class="stat-row">
+                            <span>🔍 検出地震数:</span>
+                            <strong id="stat_count">0</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>📍 最大震度:</span>
+                            <strong id="stat_max">-</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>📈 平均M:</span>
+                            <strong id="stat_avg">-</strong>
+                        </div>
+                        <div class="stat-row">
+                            <span>🌊 平均深さ:</span>
+                            <strong id="stat_depth">-</strong>
+                        </div>
+                    </div>
+                    
+                    <strong style="font-size: 12px; display: block; margin-bottom: 8px;">都道府県別地震数</strong>
+                    <div class="chart-container">
+                        <canvas id="chartPref"></canvas>
+                    </div>
+                    
+                    <strong style="font-size: 12px; display: block; margin-bottom: 8px;">月別地震数</strong>
+                    <div class="chart-container" style="height: 180px;">
+                        <canvas id="chartMonth"></canvas>
+                    </div>
+                    
+                    <strong style="font-size: 12px; display: block; margin-bottom: 8px;">震度別分布</strong>
+                    <div class="chart-container" style="height: 150px;">
+                        <canvas id="chartIntensity"></canvas>
+                    </div>
                 </div>
-                <div class="legend-item">
-                    <div class="legend-line" style="background: #9C27B0; width: 24px;"></div>
-                    <span>主要断層</span>
+                
+                <!-- 分析タブ -->
+                <div class="tab-content" id="analysis">
+                    <strong style="font-size: 12px; display: block; margin-bottom: 8px;">環境別地震数</strong>
+                    <div class="chart-container" style="height: 150px;">
+                        <canvas id="chartEnv"></canvas>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <strong style="font-size: 12px; display: block; margin-bottom: 8px;">地域別統計</strong>
+                        <div id="regionStats"></div>
+                    </div>
+                    
+                    <div class="stat-box">
+                        <strong style="font-size: 12px; display: block; margin-bottom: 8px;">月別統計</strong>
+                        <div id="monthStats"></div>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <strong>凡例</strong>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #4CAF50;"></div>
+                        <span>M2.0-3.0 震度1-2</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #FFC107;"></div>
+                        <span>M3.0-4.0 震度3</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background: #FF5722;"></div>
+                        <span>M4.0+ 震度4以上</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -123,99 +253,176 @@
             <button class="modal-close" id="modalClose">&times;</button>
             <h2 id="detailTitle"></h2>
             <p><strong>発生時刻:</strong> <span id="detailTime"></span></p>
-            <p><strong>震源地:</strong> <span id="detailLocation"></span></p>
+            <p><strong>月齢:</strong> <span id="detailLunar"></span></p>
+            <p><strong>震源地:</strong> <span id="detailLocation"></span> <span id="detailRegion" class="region-tag"></span></p>
             <p><strong>マグニチュード:</strong> <span id="detailMag"></span></p>
             <p><strong>深さ:</strong> <span id="detailDepth"></span></p>
-            <p><strong>最大震度:</strong> <span id="detailIntensity"></span></p>
-            <p><strong>緯度:</strong> <span id="detailLat"></span></p>
-            <p><strong>経度:</strong> <span id="detailLon"></span></p>
+            <p><strong>最大震度:</strong> <span id="detailIntensity" class="eq-intensity"></span></p>
+            <p><strong>緯度/経度:</strong> <span id="detailLatLon"></span></p>
+            <p><strong>環境タイプ:</strong> <span id="detailEnv"></span></p>
             <div id="detailFault" style="margin-top: 12px;"></div>
+            <p id="detailComment" style="margin-top: 12px; padding: 10px; background: #f5f5f5; border-radius: 4px; color: #666;"></p>
         </div>
     </div>
 
     <script>
-        // 2026年の地震データ（関東周辺を中心）
+        // 月齢計算関数
+        function getLunarAge(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00Z');
+            const year = date.getUTCFullYear();
+            const month = date.getUTCMonth() + 1;
+            const day = date.getUTCDate();
+            
+            // 2000年1月6日が新月（月齢1）
+            const knownNewMoonDate = new Date('2000-01-06T00:00:00Z');
+            const lunarCycle = 29.530588;
+            
+            const diff = (date - knownNewMoonDate) / (1000 * 60 * 60 * 24);
+            const lunarAge = (diff % lunarCycle) + 1;
+            
+            return Math.round(lunarAge * 10) / 10;
+        }
+
+        // 月齢アイコン取得
+        function getLunarIcon(age) {
+            if (age >= 1 && age < 3) return '🌙'; // 新月
+            if (age >= 3 && age < 8) return '🌒'; // 上弦
+            if (age >= 8 && age < 10) return '🌕'; // 満月直前
+            if (age >= 10 && age < 14) return '🌕'; // 満月
+            if (age >= 14 && age < 19) return '🌔'; // 下弦直後
+            if (age >= 19 && age < 24) return '🌗'; // 下弦
+            if (age >= 24 && age < 29) return '🌘'; // 新月直前
+            return '🌙';
+        }
+
+        // 月日本語
+        function getMonthName(monthStr) {
+            const months = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+            return months[parseInt(monthStr)];
+        }
+
+        // 全国内陸地震データ（2026年）
         const EARTHQUAKES = [
-            { date: '2026-01-05', time: '14:23', lat: 35.982, lon: 140.192, mag: 3.2, depth: 65, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
-            { date: '2026-01-15', time: '09:47', lat: 35.865, lon: 139.895, mag: 2.8, depth: 45, location: '埼玉県南部', intensity: '2', near_fault: '' },
-            { date: '2026-02-03', time: '16:12', lat: 35.712, lon: 140.156, mag: 4.1, depth: 52, location: '茨城県南部', intensity: '4', near_fault: '霞ヶ浦周辺構造' },
-            { date: '2026-02-18', time: '11:33', lat: 35.881, lon: 140.215, mag: 3.5, depth: 61, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
-            { date: '2026-03-02', time: '22:54', lat: 35.901, lon: 139.812, mag: 2.9, depth: 48, location: '埼玉県中部', intensity: '2', near_fault: '' },
-            { date: '2026-03-27', time: '07:19', lat: 35.856, lon: 140.268, mag: 3.8, depth: 55, location: '茨城県南東部', intensity: '3', near_fault: '鹿島灘構造' },
-            { date: '2026-04-11', time: '13:47', lat: 35.924, lon: 140.145, mag: 3.3, depth: 58, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
-            { date: '2026-05-06', time: '18:22', lat: 35.798, lon: 139.965, mag: 2.7, depth: 42, location: '東京都西部', intensity: '2', near_fault: '' },
-            { date: '2026-05-19', time: '03:11', lat: 35.875, lon: 140.198, mag: 4.3, depth: 64, location: '千葉県北東部', intensity: '4', near_fault: '東日本大震災余震域' },
-            { date: '2026-06-14', time: '12:38', lat: 35.723, lon: 140.082, mag: 3.1, depth: 49, location: '茨城県西部', intensity: '2', near_fault: '' },
-            { date: '2026-07-08', time: '21:45', lat: 35.912, lon: 140.256, mag: 3.6, depth: 57, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
-            { date: '2026-08-03', time: '15:29', lat: 35.845, lon: 139.934, mag: 2.8, depth: 46, location: '埼玉県南東部', intensity: '2', near_fault: '' },
-            { date: '2026-08-25', time: '09:16', lat: 35.795, lon: 140.212, mag: 4.0, depth: 61, location: '茨城県南部', intensity: '4', near_fault: '霞ヶ浦周辺構造' },
-            { date: '2026-09-12', time: '06:33', lat: 35.901, lon: 140.178, mag: 3.4, depth: 53, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
-            { date: '2026-09-28', time: '19:54', lat: 35.865, lon: 140.195, mag: 4.2, depth: 62, location: '吉川市周辺', intensity: '4', near_fault: '関東構造線' }
+            // 北海道
+            { date: '2026-01-08', time: '09:15', lat: 43.652, lon: 142.458, mag: 3.2, depth: 78, intensity: '2', pref: '北海道', region: '北海道', location: '根室地方', env: '山間部', fault: '根室半島沖構造' },
+            { date: '2026-02-14', time: '13:42', lat: 44.201, lon: 142.821, mag: 2.9, depth: 65, intensity: '2', pref: '北海道', region: '北海道', location: '道東', env: '山間部', fault: '' },
+            { date: '2026-05-22', time: '16:35', lat: 42.984, lon: 141.650, mag: 3.8, depth: 85, intensity: '3', pref: '北海道', region: '北海道', location: '札幌近郊', env: '都市部', fault: '' },
+            { date: '2026-08-09', time: '11:22', lat: 43.421, lon: 142.150, mag: 3.1, depth: 72, intensity: '2', pref: '北海道', region: '北海道', location: '帯広地方', env: '山間部', fault: '' },
+            
+            // 東北
+            { date: '2026-01-20', time: '14:58', lat: 40.892, lon: 141.195, mag: 3.5, depth: 92, intensity: '3', pref: '岩手県', region: '東北', location: '盛岡地方', env: '山間部', fault: '北上低地西縁断層帯' },
+            { date: '2026-02-05', time: '08:12', lat: 39.415, lon: 141.825, mag: 2.8, depth: 58, intensity: '2', pref: '宮城県', region: '東北', location: '宮城県沖余震域', env: '海岸部', fault: '東日本大震災余震域' },
+            { date: '2026-03-18', time: '17:34', lat: 39.812, lon: 140.785, mag: 3.3, depth: 68, intensity: '2', pref: '秋田県', region: '東北', location: '秋田内陸', env: '山間部', fault: '秋田内陸地震帯' },
+            { date: '2026-04-03', time: '22:15', lat: 37.924, lon: 140.645, mag: 4.2, depth: 105, intensity: '4', pref: '福島県', region: '東北', location: '福島沖', env: '海岸部', fault: '東日本大震災余震域' },
+            { date: '2026-06-11', time: '10:47', lat: 40.245, lon: 141.512, mag: 3.0, depth: 75, intensity: '2', pref: '青森県', region: '東北', location: '青森県南部', env: '山間部', fault: '' },
+            { date: '2026-07-27', time: '19:21', lat: 38.512, lon: 140.921, mag: 3.4, depth: 82, intensity: '3', pref: '山形県', region: '東北', location: '置賜地方', env: '山間部', fault: '' },
+            
+            // 関東
+            { date: '2026-01-15', time: '09:47', lat: 35.865, lon: 139.895, mag: 2.8, depth: 45, intensity: '2', pref: '埼玉県', region: '関東', location: '埼玉県南部', env: '都市部', fault: '' },
+            { date: '2026-02-03', time: '16:12', lat: 35.712, lon: 140.156, mag: 4.1, depth: 52, intensity: '4', pref: '茨城県', region: '関東', location: '茨城県南部', env: '都市部', fault: '霞ヶ浦周辺構造' },
+            { date: '2026-03-14', time: '11:29', lat: 36.751, lon: 138.221, mag: 3.2, depth: 48, intensity: '2', pref: '栃木県', region: '関東', location: '栃木県中部', env: '山間部', fault: '' },
+            { date: '2026-04-22', time: '15:08', lat: 35.298, lon: 139.158, mag: 3.6, depth: 62, intensity: '3', pref: '千葉県', region: '関東', location: '千葉県東方沖', env: '海岸部', fault: '' },
+            { date: '2026-05-19', time: '03:11', lat: 35.901, lon: 140.178, mag: 4.3, depth: 64, intensity: '4', pref: '千葉県', region: '関東', location: '千葉県北東部', env: '山間部', fault: '東日本大震災余震域' },
+            { date: '2026-06-08', time: '12:35', lat: 35.621, lon: 139.458, mag: 2.9, depth: 51, intensity: '2', pref: '東京都', region: '関東', location: '東京都西部', env: '都市部', fault: '' },
+            { date: '2026-07-12', time: '14:22', lat: 35.451, lon: 139.782, mag: 3.1, depth: 55, intensity: '2', pref: '神奈川県', region: '関東', location: '神奈川県中部', env: '都市部', fault: '' },
+            { date: '2026-08-25', time: '09:16', lat: 35.795, lon: 140.212, mag: 4.0, depth: 61, intensity: '4', pref: '茨城県', region: '関東', location: '茨城県南部', env: '都市部', fault: '霞ヶ浦周辺構造' },
+            { date: '2026-09-28', time: '19:54', lat: 35.865, lon: 140.195, mag: 4.2, depth: 62, intensity: '4', pref: '埼玉県', region: '関東', location: '吉川市周辺', env: '都市部', fault: '関東構造線' },
+            
+            // 中部
+            { date: '2026-01-25', time: '07:18', lat: 36.821, lon: 137.495, mag: 3.7, depth: 78, intensity: '3', pref: '長野県', region: '中部', location: '長野県中部', env: '山間部', fault: '糸魚川-静岡構造線' },
+            { date: '2026-03-09', time: '18:45', lat: 36.421, lon: 137.852, mag: 3.2, depth: 55, intensity: '2', pref: '岐阜県', region: '中部', location: '飛騨地方', env: '山間部', fault: '' },
+            { date: '2026-04-16', time: '09:22', lat: 37.121, lon: 138.282, mag: 3.9, depth: 70, intensity: '3', pref: '新潟県', region: '中部', location: '新潟県南部', env: '山間部', fault: '日本海東縁変動帯' },
+            { date: '2026-05-08', time: '20:15', lat: 35.421, lon: 137.850, mag: 2.8, depth: 48, intensity: '2', pref: '愛知県', region: '中部', location: '愛知県内陸', env: '都市部', fault: '' },
+            { date: '2026-06-20', time: '13:42', lat: 34.821, lon: 138.154, mag: 3.5, depth: 65, intensity: '3', pref: '静岡県', region: '中部', location: '静岡県中部', env: '山間部', fault: '糸魚川-静岡構造線' },
+            { date: '2026-07-31', time: '16:08', lat: 36.125, lon: 138.512, mag: 3.1, depth: 58, intensity: '2', pref: '山梨県', region: '中部', location: '山梨県西部', env: '山間部', fault: '' },
+            { date: '2026-09-14', time: '11:19', lat: 37.451, lon: 139.214, mag: 3.6, depth: 72, intensity: '3', pref: '新潟県', region: '中部', location: '新潟県上越', env: '山間部', fault: '' },
+            
+            // 関西
+            { date: '2026-02-12', time: '10:33', lat: 35.142, lon: 136.821, mag: 3.3, depth: 68, intensity: '2', pref: '滋賀県', region: '関西', location: '滋賀県南部', env: '山間部', fault: '琵琶湖西岸構造' },
+            { date: '2026-03-28', time: '14:45', lat: 34.852, lon: 135.748, mag: 3.8, depth: 55, intensity: '3', pref: '京都府', region: '関西', location: '京都府南部', env: '山間部', fault: '' },
+            { date: '2026-04-19', time: '08:22', lat: 34.521, lon: 135.421, mag: 4.1, depth: 62, intensity: '4', pref: '兵庫県', region: '関西', location: '兵庫県播磨地方', env: '山間部', fault: '山崎断層帯' },
+            { date: '2026-05-25', time: '17:33', lat: 34.321, lon: 136.158, mag: 2.9, depth: 52, intensity: '2', pref: '奈良県', region: '関西', location: '奈良県中部', env: '山間部', fault: '' },
+            { date: '2026-07-06', time: '12:41', lat: 34.215, lon: 135.821, mag: 3.2, depth: 58, intensity: '2', pref: '大阪府', region: '関西', location: '大阪府東部', env: '都市部', fault: '' },
+            { date: '2026-08-18', time: '19:27', lat: 33.921, lon: 135.452, mag: 3.4, depth: 65, intensity: '2', pref: '和歌山県', region: '関西', location: '和歌山県北部', env: '山間部', fault: '' },
+            
+            // 中国
+            { date: '2026-01-30', time: '15:12', lat: 34.821, lon: 133.421, mag: 3.1, depth: 70, intensity: '2', pref: '岡山県', region: '中国', location: '岡山県北部', env: '山間部', fault: '' },
+            { date: '2026-03-17', time: '09:48', lat: 35.125, lon: 132.854, mag: 3.7, depth: 75, intensity: '3', pref: '島根県', region: '中国', location: '島根県東部', env: '山間部', fault: '' },
+            { date: '2026-05-02', time: '11:34', lat: 34.421, lon: 132.124, mag: 3.2, depth: 62, intensity: '2', pref: '広島県', region: '中国', location: '広島県北部', env: '山間部', fault: '' },
+            { date: '2026-06-29', time: '13:58', lat: 34.854, lon: 131.612, mag: 2.8, depth: 58, intensity: '2', pref: '山口県', region: '中国', location: '山口県東部', env: '山間部', fault: '' },
+            
+            // 四国
+            { date: '2026-02-21', time: '16:15', lat: 33.852, lon: 134.421, mag: 3.5, depth: 68, intensity: '3', pref: '香川県', region: '四国', location: '香川県西部', env: '山間部', fault: '' },
+            { date: '2026-04-10', time: '10:22', lat: 33.421, lon: 133.854, mag: 3.9, depth: 72, intensity: '3', pref: '徳島県', region: '四国', location: '徳島県中部', env: '山間部', fault: 'フォッサマグナ東縁' },
+            { date: '2026-06-15', time: '14:48', lat: 33.125, lon: 133.152, mag: 3.3, depth: 65, intensity: '2', pref: '高知県', region: '四国', location: '高知県北部', env: '山間部', fault: '' },
+            { date: '2026-08-07', time: '12:35', lat: 34.051, lon: 134.821, mag: 3.0, depth: 61, intensity: '2', pref: '愛媛県', region: '四国', location: '愛媛県東部', env: '山間部', fault: '' },
+            
+            // 九州
+            { date: '2026-01-12', time: '18:29', lat: 32.521, lon: 130.854, mag: 3.8, depth: 75, intensity: '3', pref: '熊本県', region: '九州', location: '熊本県北部', env: '山間部', fault: '布田川-日奈久断層帯' },
+            { date: '2026-02-27', time: '11:15', lat: 31.821, lon: 131.421, mag: 3.2, depth: 68, intensity: '2', pref: '宮崎県', region: '九州', location: '宮崎県北部', env: '山間部', fault: '' },
+            { date: '2026-04-08', time: '09:42', lat: 33.125, lon: 129.854, mag: 3.6, depth: 72, intensity: '3', pref: '鹿児島県', region: '九州', location: '鹿児島県北部', env: '山間部', fault: '' },
+            { date: '2026-05-14', time: '15:33', lat: 32.421, lon: 129.125, mag: 2.9, depth: 58, intensity: '2', pref: '長崎県', region: '九州', location: '長崎県東部', env: '山間部', fault: '' },
+            { date: '2026-07-19', time: '13:47', lat: 33.854, lon: 130.621, mag: 3.4, depth: 65, intensity: '2', pref: '福岡県', region: '九州', location: '福岡県西部', env: '都市部', fault: '' },
+            { date: '2026-09-05', time: '17:22', lat: 32.752, lon: 130.925, mag: 3.7, depth: 70, intensity: '3', pref: '佐賀県', region: '九州', location: '佐賀県中部', env: '山間部', fault: '' }
         ];
         
-        // 主要断層データ
-        const FAULTS = [
-            { name: '関東構造線', coords: [[35.8, 139.9], [35.95, 140.3]], color: '#9C27B0' },
-            { name: '東日本大震災余震域', coords: [[36.0, 140.0], [36.2, 140.5]], color: '#FF6B00' },
-            { name: '霞ヶ浦周辺構造', coords: [[35.6, 140.2], [35.8, 140.4]], color: '#4CAF50' },
-            { name: '鹿島灘構造', coords: [[35.5, 140.4], [35.8, 140.8]], color: '#2196F3' }
-        ];
-
-        class EarthquakeMap {
+        class NationalEarthquakeMap {
             constructor() {
                 this.map = null;
-                this.earthquakes = EARTHQUAKES;
+                this.earthquakes = JSON.parse(JSON.stringify(EARTHQUAKES));
+                this.filtered = JSON.parse(JSON.stringify(EARTHQUAKES));
                 this.markers = [];
-                this.faultLines = [];
-                this.selectedEQ = null;
+                this.dark = false;
+                this.charts = {};
                 this.init();
             }
 
             init() {
                 this.initMap();
-                this.renderEarthquakes();
-                this.updateStats();
+                this.buildFilters();
+                this.render();
                 this.attachEvents();
             }
 
             initMap() {
-                this.map = L.map('map').setView([35.9, 140.1], 9);
+                this.map = L.map('map').setView([36.5, 138.0], 5);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors',
+                    attribution: '© OpenStreetMap',
                     maxZoom: 19
                 }).addTo(this.map);
-                
-                this.drawFaults();
-                this.drawEarthquakes();
             }
 
-            drawFaults() {
-                FAULTS.forEach(fault => {
-                    const line = L.polyline(fault.coords, {
-                        color: fault.color,
-                        weight: 3,
-                        opacity: 0.7,
-                        dashArray: '5, 5',
-                        className: 'fault-line'
-                    }).addTo(this.map);
-                    
-                    const label = L.marker(fault.coords[0], {
-                        icon: L.divIcon({
-                            html: `<div style="background: ${fault.color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${fault.name}</div>`,
-                            className: 'fault-label'
-                        })
-                    }).addTo(this.map);
-                    
-                    this.faultLines.push(line);
+            buildFilters() {
+                const prefs = [...new Set(this.earthquakes.map(e => e.pref))].sort();
+                const prefSelect = document.getElementById('prefFilter');
+                prefs.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    prefSelect.appendChild(opt);
                 });
             }
 
-            drawEarthquakes() {
-                this.earthquakes.forEach(eq => {
+            getColor(mag, intensity) {
+                if (parseInt(intensity) >= 4 || mag >= 4) return '#FF5722';
+                if (parseInt(intensity) >= 3 || mag >= 3) return '#FFC107';
+                return '#4CAF50';
+            }
+
+            render() {
+                this.renderMap();
+                this.renderList();
+                this.updateStats();
+                this.renderCharts();
+            }
+
+            renderMap() {
+                this.markers.forEach(m => this.map.removeLayer(m));
+                this.markers = [];
+                
+                this.filtered.forEach(eq => {
+                    const color = this.getColor(eq.mag, eq.intensity);
                     const radius = 8 + (eq.mag - 2) * 4;
-                    let color = '#4CAF50';
-                    if (eq.mag >= 4) color = '#FF5722';
-                    else if (eq.mag >= 3) color = '#FFC107';
                     
                     const circle = L.circleMarker([eq.lat, eq.lon], {
                         radius: radius,
@@ -223,74 +430,281 @@
                         color: '#fff',
                         weight: 2,
                         opacity: 0.8,
-                        fillOpacity: 0.7,
-                        className: 'earthquake-marker'
+                        fillOpacity: 0.7
                     }).addTo(this.map);
-                    
-                    circle.bindPopup(`
-                        <strong>${eq.location}</strong><br>
-                        M${eq.mag} 震度${eq.intensity}<br>
-                        ${eq.date} ${eq.time}
-                    `);
                     
                     circle.on('click', () => this.showDetail(eq));
                     this.markers.push(circle);
                 });
             }
 
-            renderEarthquakes() {
-                const container = document.getElementById('earthquakes');
-                container.innerHTML = this.earthquakes.map((eq, idx) => `
-                    <div class="eq-item" data-idx="${idx}" onclick="app.selectEQ(${idx})">
-                        <div class="eq-time">${eq.date} ${eq.time}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="eq-location">${eq.location}</span>
-                            <span class="eq-mag">M${eq.mag}</span>
+            renderList() {
+                const list = document.getElementById('eqList');
+                list.innerHTML = this.filtered.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time)).map(eq => {
+                    const lunarAge = getLunarAge(eq.date);
+                    const lunarIcon = getLunarIcon(lunarAge);
+                    return `
+                    <div class="eq-item" onclick="app.showDetail(this.dataset);" data-date="${eq.date}" data-time="${eq.time}" data-lat="${eq.lat}" data-lon="${eq.lon}" data-mag="${eq.mag}" data-depth="${eq.depth}" data-intensity="${eq.intensity}" data-pref="${eq.pref}" data-region="${eq.region}" data-location="${eq.location}" data-env="${eq.env}" data-fault="${eq.fault}">
+                        <div class="eq-header">
+                            <div>
+                                <span class="eq-location">${eq.pref}</span><br>
+                                <span style="font-size: 11px; color: #666;">${eq.date} ${eq.time}</span>
+                            </div>
+                            <div>
+                                <span class="eq-mag">M${eq.mag}</span>
+                                <span class="eq-intensity">${eq.intensity}</span>
+                            </div>
                         </div>
-                        <div class="eq-depth">深さ ${eq.depth}km • 震度${eq.intensity}</div>
+                        <div class="eq-detail">${eq.location} <span class="lunar-phase" style="margin-left: 0; margin-top: 4px;">${lunarIcon} ${lunarAge.toFixed(1)}</span></div>
                     </div>
-                `).join('');
-            }
-
-            selectEQ(idx) {
-                document.querySelectorAll('.eq-item').forEach(el => el.classList.remove('active'));
-                document.querySelector(`[data-idx="${idx}"]`).classList.add('active');
-                this.showDetail(this.earthquakes[idx]);
-                this.map.setView([this.earthquakes[idx].lat, this.earthquakes[idx].lon], 10);
+                `;
+                }).join('');
             }
 
             showDetail(eq) {
-                this.selectedEQ = eq;
+                if (typeof eq === 'object' && !eq.date) {
+                    eq = this.earthquakes.find(e => e.date === eq.date && e.time === eq.time);
+                }
+                
+                const lunarAge = getLunarAge(eq.date);
+                const lunarIcon = getLunarIcon(lunarAge);
+                const lunarPhase = {
+                    1: '新月',
+                    3: '初眉月',
+                    8: '上弦',
+                    14: '満月',
+                    19: '下弦直後',
+                    24: '下弦'
+                };
+                
+                let phase = '新月';
+                if (lunarAge < 3) phase = '新月';
+                else if (lunarAge < 8) phase = '初眉月';
+                else if (lunarAge < 10) phase = '上弦直前';
+                else if (lunarAge < 14) phase = '満月';
+                else if (lunarAge < 19) phase = '下弦直後';
+                else if (lunarAge < 24) phase = '下弦';
+                else phase = '新月直前';
+                
                 document.getElementById('detailTitle').textContent = `${eq.location} M${eq.mag}`;
                 document.getElementById('detailTime').textContent = `${eq.date} ${eq.time}`;
+                document.getElementById('detailLunar').innerHTML = `<span class="lunar-icon">${lunarIcon}</span><strong>${phase}</strong> (月齢${lunarAge.toFixed(1)})`;
                 document.getElementById('detailLocation').textContent = eq.location;
+                document.getElementById('detailRegion').textContent = eq.region;
                 document.getElementById('detailMag').textContent = `${eq.mag}`;
                 document.getElementById('detailDepth').textContent = `${eq.depth}km`;
-                document.getElementById('detailIntensity').textContent = `${eq.intensity}`;
-                document.getElementById('detailLat').textContent = `${eq.lat.toFixed(3)}°`;
-                document.getElementById('detailLon').textContent = `${eq.lon.toFixed(3)}°`;
+                document.getElementById('detailIntensity').textContent = eq.intensity;
+                document.getElementById('detailLatLon').textContent = `${eq.lat.toFixed(3)}°N / ${eq.lon.toFixed(3)}°E`;
+                
+                const envLabel = { '都市部': '都市部 🏙️', '山間部': '山間部 ⛰️', '海岸部': '海岸部 🌊' };
+                const envClass = { '都市部': 'env-urban', '山間部': 'env-mountain', '海岸部': 'env-coastal' };
+                document.getElementById('detailEnv').innerHTML = `<span class="env-tag ${envClass[eq.env]}">${envLabel[eq.env]}</span>`;
                 
                 const faultDiv = document.getElementById('detailFault');
-                if (eq.near_fault) {
-                    faultDiv.innerHTML = `<strong>🔍 関連断層:</strong> ${eq.near_fault}`;
+                if (eq.fault) {
+                    faultDiv.innerHTML = `<strong>🔍 関連断層:</strong> ${eq.fault}`;
                 } else {
                     faultDiv.innerHTML = '<strong>🔍 関連断層:</strong> 特定されない';
                 }
+                
+                document.getElementById('detailComment').textContent = `地震詳細: ${eq.pref}の${eq.location}で深さ${eq.depth}kmのマグニチュード${eq.mag}の内陸地震が発生しました。月齢${lunarAge.toFixed(1)}の${phase}の時期でした。`;
                 
                 document.getElementById('detailModal').classList.remove('hidden');
             }
 
             updateStats() {
-                const count = this.earthquakes.length;
-                const maxIntensity = Math.max(...this.earthquakes.map(e => parseInt(e.intensity)));
-                const avgMag = (this.earthquakes.reduce((s, e) => s + e.mag, 0) / count).toFixed(2);
+                const count = this.filtered.length;
+                if (count === 0) {
+                    document.getElementById('stat_count').textContent = '0';
+                    document.getElementById('stat_max').textContent = '-';
+                    document.getElementById('stat_avg').textContent = '-';
+                    document.getElementById('stat_depth').textContent = '-';
+                    return;
+                }
+                
+                const maxIntensity = Math.max(...this.filtered.map(e => parseInt(e.intensity)));
+                const avgMag = (this.filtered.reduce((s, e) => s + e.mag, 0) / count).toFixed(2);
+                const avgDepth = (this.filtered.reduce((s, e) => s + e.depth, 0) / count).toFixed(1);
                 
                 document.getElementById('stat_count').textContent = count;
                 document.getElementById('stat_max').textContent = maxIntensity;
                 document.getElementById('stat_avg').textContent = avgMag;
+                document.getElementById('stat_depth').textContent = avgDepth + 'km';
+            }
+
+            renderCharts() {
+                this.renderPrefChart();
+                this.renderMonthChart();
+                this.renderIntensityChart();
+                this.renderEnvChart();
+                this.renderRegionStats();
+                this.renderMonthStats();
+            }
+
+            renderPrefChart() {
+                const counts = {};
+                this.filtered.forEach(e => {
+                    counts[e.pref] = (counts[e.pref] || 0) + 1;
+                });
+                
+                const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                const labels = sorted.map(([p]) => p.substring(0, 4));
+                const data = sorted.map(([, c]) => c);
+                
+                const ctx = document.getElementById('chartPref');
+                if (this.charts.pref) this.charts.pref.destroy();
+                this.charts.pref = new Chart(ctx, {
+                    type: 'bar',
+                    data: { labels, datasets: [{ label: '地震数', data, backgroundColor: '#2196F3' }] },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                });
+            }
+
+            renderMonthChart() {
+                const counts = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0, '10': 0, '11': 0, '12': 0 };
+                this.filtered.forEach(e => {
+                    const month = e.date.split('-')[1];
+                    counts[month]++;
+                });
+                
+                const labels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                const data = Object.values(counts);
+                
+                const ctx = document.getElementById('chartMonth');
+                if (this.charts.month) this.charts.month.destroy();
+                this.charts.month = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: '月別地震数',
+                            data,
+                            borderColor: '#FF6B6B',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                });
+            }
+
+            renderIntensityChart() {
+                const counts = { '1': 0, '2': 0, '3': 0, '4+': 0 };
+                this.filtered.forEach(e => {
+                    const i = parseInt(e.intensity);
+                    if (i >= 4) counts['4+']++;
+                    else counts[i]++;
+                });
+                
+                const ctx = document.getElementById('chartIntensity');
+                if (this.charts.intensity) this.charts.intensity.destroy();
+                this.charts.intensity = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['震度1', '震度2', '震度3', '震度4以上'],
+                        datasets: [{
+                            data: [counts['1'], counts['2'], counts['3'], counts['4+']],
+                            backgroundColor: ['#4CAF50', '#FFC107', '#FF9800', '#FF5722']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            renderEnvChart() {
+                const counts = { '都市部': 0, '山間部': 0, '海岸部': 0 };
+                this.filtered.forEach(e => counts[e.env]++);
+                
+                const ctx = document.getElementById('chartEnv');
+                if (this.charts.env) this.charts.env.destroy();
+                this.charts.env = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['都市部', '山間部', '海岸部'],
+                        datasets: [{
+                            data: [counts['都市部'], counts['山間部'], counts['海岸部']],
+                            backgroundColor: ['#ffebee', '#e8f5e9', '#e0f2f1']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            }
+
+            renderRegionStats() {
+                const regions = {};
+                this.filtered.forEach(e => {
+                    if (!regions[e.region]) regions[e.region] = { count: 0, avgMag: 0 };
+                    regions[e.region].count++;
+                    regions[e.region].avgMag += e.mag;
+                });
+                
+                Object.keys(regions).forEach(r => {
+                    regions[r].avgMag = (regions[r].avgMag / regions[r].count).toFixed(2);
+                });
+                
+                const html = Object.entries(regions).map(([r, {count, avgMag}]) => `
+                    <div class="stat-row">
+                        <span>${r}:</span>
+                        <strong>${count}件 (M${avgMag})</strong>
+                    </div>
+                `).join('');
+                
+                document.getElementById('regionStats').innerHTML = html;
+            }
+
+            renderMonthStats() {
+                const months = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0, '6': 0, '7': 0, '8': 0, '9': 0, '10': 0, '11': 0, '12': 0 };
+                this.filtered.forEach(e => {
+                    const month = e.date.split('-')[1];
+                    months[month]++;
+                });
+                
+                const html = Object.entries(months).map(([m, c]) => {
+                    const monthName = getMonthName(m);
+                    return `
+                    <div class="stat-row">
+                        <span>${monthName}:</span>
+                        <strong>${c}件</strong>
+                    </div>
+                    `;
+                }).join('');
+                
+                document.getElementById('monthStats').innerHTML = html;
+            }
+
+            applyFilter() {
+                const month = document.getElementById('monthFilter').value;
+                const pref = document.getElementById('prefFilter').value;
+                const region = document.getElementById('regionFilter').value;
+                const intensity = document.getElementById('intensityFilter').value;
+                const env = document.getElementById('envFilter').value;
+                
+                this.filtered = this.earthquakes.filter(e => {
+                    if (month && e.date.split('-')[1] !== month) return false;
+                    if (pref && e.pref !== pref) return false;
+                    if (region && e.region !== region) return false;
+                    if (intensity) {
+                        const i = parseInt(e.intensity);
+                        if (intensity === '1' && i !== 1) return false;
+                        if (intensity === '2' && i !== 2) return false;
+                        if (intensity === '3' && i !== 3) return false;
+                        if (intensity === '4' && i < 4) return false;
+                    }
+                    if (env && e.env !== env) return false;
+                    return true;
+                });
+                
+                this.render();
             }
 
             attachEvents() {
+                document.getElementById('applyFilter').onclick = () => this.applyFilter();
+                document.getElementById('darkBtn').onclick = () => {
+                    this.dark = !this.dark;
+                    document.querySelector('.app').classList.toggle('dark');
+                };
+                
                 document.getElementById('modalClose').onclick = () => {
                     document.getElementById('detailModal').classList.add('hidden');
                 };
@@ -301,29 +715,18 @@
                     }
                 };
                 
-                document.getElementById('filter_fault').onchange = (e) => {
-                    this.faultLines.forEach(line => {
-                        if (e.target.checked) {
-                            this.map.addLayer(line);
-                        } else {
-                            this.map.removeLayer(line);
-                        }
-                    });
-                };
-                
-                document.getElementById('filter_epi').onchange = (e) => {
-                    this.markers.forEach(marker => {
-                        if (e.target.checked) {
-                            this.map.addLayer(marker);
-                        } else {
-                            this.map.removeLayer(marker);
-                        }
-                    });
-                };
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        btn.classList.add('active');
+                        document.getElementById(btn.getAttribute('data-tab')).classList.add('active');
+                    };
+                });
             }
         }
 
-        const app = new EarthquakeMap();
+        const app = new NationalEarthquakeMap();
     </script>
 </body>
 </html>

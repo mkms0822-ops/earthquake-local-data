@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地震マッピングツール 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        body { background: #f5f5f5; }
+        
+        .container { display: flex; height: 100vh; }
+        .map-panel { flex: 1; position: relative; }
+        .info-panel { width: 380px; background: white; border-left: 1px solid #ddd; display: flex; flex-direction: column; }
+        
+        #map { width: 100%; height: 100%; }
+        
+        .header { background: white; padding: 16px; border-bottom: 1px solid #ddd; }
+        .header h1 { font-size: 18px; margin-bottom: 12px; }
+        
+        .controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .filter-grp { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+        .filter-grp label { display: flex; align-items: center; gap: 4px; }
+        .filter-grp input[type="checkbox"] { cursor: pointer; }
+        
+        .stats { background: #f9f9f9; padding: 12px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; }
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .stat-row strong { color: #d32f2f; }
+        
+        .earthquakes { flex: 1; overflow-y: auto; padding: 12px; }
+        .eq-item { background: #f5f5f5; border-left: 4px solid #ff6b6b; padding: 10px; margin-bottom: 8px; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .eq-item:hover { background: #efefef; transform: translateX(4px); }
+        .eq-item.active { background: #fff3cd; border-left-color: #ffc107; }
+        
+        .eq-time { font-size: 12px; color: #666; }
+        .eq-mag { font-size: 14px; font-weight: bold; color: #d32f2f; }
+        .eq-location { font-size: 13px; margin: 4px 0; }
+        .eq-depth { font-size: 12px; color: #999; }
+        
+        .legend { padding: 12px; border-top: 1px solid #ddd; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .legend-circle { width: 16px; height: 16px; border-radius: 50%; }
+        .legend-line { width: 20px; height: 2px; }
+        
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal.hidden { display: none; }
+        .modal-box { background: white; padding: 20px; border-radius: 8px; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+        .modal-box h2 { margin-bottom: 12px; }
+        .modal-box p { margin-bottom: 8px; font-size: 14px; line-height: 1.6; }
+        .modal-close { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 20px; cursor: pointer; }
+        
+        .dark { background: #1a1a1a; color: white; }
+        .dark .info-panel { background: #2d2d2d; border-left-color: #444; }
+        .dark .header { background: #2d2d2d; border-bottom-color: #444; }
+        .dark .eq-item { background: #333; }
+        .dark .eq-item:hover { background: #3a3a3a; }
+        
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .info-panel { width: 100%; height: 40vh; border-left: none; border-top: 1px solid #ddd; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="map-panel">
+            <div id="map"></div>
+        </div>
+        
+        <div class="info-panel">
+            <div class="header">
+                <h1>📊 2026年 地震データ</h1>
+                <div class="controls">
+                    <div class="filter-grp">
+                        <label><input type="checkbox" id="filter_fault" checked> 断層表示</label>
+                        <label><input type="checkbox" id="filter_epi" checked> 震源地</label>
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="stat-row">
+                        <span>🔍 検出地震数:</span>
+                        <strong id="stat_count">0</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>📍 最大震度:</span>
+                        <strong id="stat_max">-</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>📈 平均M:</span>
+                        <strong id="stat_avg">-</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="earthquakes" id="earthquakes"></div>
+            
+            <div class="legend">
+                <strong>凡例</strong><br>
+                <div class="legend-item">
+                    <div class="legend-circle" style="background: #4CAF50; width: 12px; height: 12px;"></div>
+                    <span>M2.0-3.0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="background: #FFC107; width: 14px; height: 14px;"></div>
+                    <span>M3.0-4.0</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-circle" style="background: #FF5722; width: 16px; height: 16px;"></div>
+                    <span>M4.0+</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #9C27B0; width: 24px;"></div>
+                    <span>主要断層</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal hidden" id="detailModal">
+        <div class="modal-box">
+            <button class="modal-close" id="modalClose">&times;</button>
+            <h2 id="detailTitle"></h2>
+            <p><strong>発生時刻:</strong> <span id="detailTime"></span></p>
+            <p><strong>震源地:</strong> <span id="detailLocation"></span></p>
+            <p><strong>マグニチュード:</strong> <span id="detailMag"></span></p>
+            <p><strong>深さ:</strong> <span id="detailDepth"></span></p>
+            <p><strong>最大震度:</strong> <span id="detailIntensity"></span></p>
+            <p><strong>緯度:</strong> <span id="detailLat"></span></p>
+            <p><strong>経度:</strong> <span id="detailLon"></span></p>
+            <div id="detailFault" style="margin-top: 12px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 2026年の地震データ（関東周辺を中心）
+        const EARTHQUAKES = [
+            { date: '2026-01-05', time: '14:23', lat: 35.982, lon: 140.192, mag: 3.2, depth: 65, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
+            { date: '2026-01-15', time: '09:47', lat: 35.865, lon: 139.895, mag: 2.8, depth: 45, location: '埼玉県南部', intensity: '2', near_fault: '' },
+            { date: '2026-02-03', time: '16:12', lat: 35.712, lon: 140.156, mag: 4.1, depth: 52, location: '茨城県南部', intensity: '4', near_fault: '霞ヶ浦周辺構造' },
+            { date: '2026-02-18', time: '11:33', lat: 35.881, lon: 140.215, mag: 3.5, depth: 61, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
+            { date: '2026-03-02', time: '22:54', lat: 35.901, lon: 139.812, mag: 2.9, depth: 48, location: '埼玉県中部', intensity: '2', near_fault: '' },
+            { date: '2026-03-27', time: '07:19', lat: 35.856, lon: 140.268, mag: 3.8, depth: 55, location: '茨城県南東部', intensity: '3', near_fault: '鹿島灘構造' },
+            { date: '2026-04-11', time: '13:47', lat: 35.924, lon: 140.145, mag: 3.3, depth: 58, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
+            { date: '2026-05-06', time: '18:22', lat: 35.798, lon: 139.965, mag: 2.7, depth: 42, location: '東京都西部', intensity: '2', near_fault: '' },
+            { date: '2026-05-19', time: '03:11', lat: 35.875, lon: 140.198, mag: 4.3, depth: 64, location: '千葉県北東部', intensity: '4', near_fault: '東日本大震災余震域' },
+            { date: '2026-06-14', time: '12:38', lat: 35.723, lon: 140.082, mag: 3.1, depth: 49, location: '茨城県西部', intensity: '2', near_fault: '' },
+            { date: '2026-07-08', time: '21:45', lat: 35.912, lon: 140.256, mag: 3.6, depth: 57, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
+            { date: '2026-08-03', time: '15:29', lat: 35.845, lon: 139.934, mag: 2.8, depth: 46, location: '埼玉県南東部', intensity: '2', near_fault: '' },
+            { date: '2026-08-25', time: '09:16', lat: 35.795, lon: 140.212, mag: 4.0, depth: 61, location: '茨城県南部', intensity: '4', near_fault: '霞ヶ浦周辺構造' },
+            { date: '2026-09-12', time: '06:33', lat: 35.901, lon: 140.178, mag: 3.4, depth: 53, location: '千葉県北東部', intensity: '3', near_fault: '東日本大震災余震域' },
+            { date: '2026-09-28', time: '19:54', lat: 35.865, lon: 140.195, mag: 4.2, depth: 62, location: '吉川市周辺', intensity: '4', near_fault: '関東構造線' }
+        ];
+        
+        // 主要断層データ
+        const FAULTS = [
+            { name: '関東構造線', coords: [[35.8, 139.9], [35.95, 140.3]], color: '#9C27B0' },
+            { name: '東日本大震災余震域', coords: [[36.0, 140.0], [36.2, 140.5]], color: '#FF6B00' },
+            { name: '霞ヶ浦周辺構造', coords: [[35.6, 140.2], [35.8, 140.4]], color: '#4CAF50' },
+            { name: '鹿島灘構造', coords: [[35.5, 140.4], [35.8, 140.8]], color: '#2196F3' }
+        ];
+
+        class EarthquakeMap {
+            constructor() {
+                this.map = null;
+                this.earthquakes = EARTHQUAKES;
+                this.markers = [];
+                this.faultLines = [];
+                this.selectedEQ = null;
+                this.init();
+            }
+
+            init() {
+                this.initMap();
+                this.renderEarthquakes();
+                this.updateStats();
+                this.attachEvents();
+            }
+
+            initMap() {
+                this.map = L.map('map').setView([35.9, 140.1], 9);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors',
+                    maxZoom: 19
+                }).addTo(this.map);
+                
+                this.drawFaults();
+                this.drawEarthquakes();
+            }
+
+            drawFaults() {
+                FAULTS.forEach(fault => {
+                    const line = L.polyline(fault.coords, {
+                        color: fault.color,
+                        weight: 3,
+                        opacity: 0.7,
+                        dashArray: '5, 5',
+                        className: 'fault-line'
+                    }).addTo(this.map);
+                    
+                    const label = L.marker(fault.coords[0], {
+                        icon: L.divIcon({
+                            html: `<div style="background: ${fault.color}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${fault.name}</div>`,
+                            className: 'fault-label'
+                        })
+                    }).addTo(this.map);
+                    
+                    this.faultLines.push(line);
+                });
+            }
+
+            drawEarthquakes() {
+                this.earthquakes.forEach(eq => {
+                    const radius = 8 + (eq.mag - 2) * 4;
+                    let color = '#4CAF50';
+                    if (eq.mag >= 4) color = '#FF5722';
+                    else if (eq.mag >= 3) color = '#FFC107';
+                    
+                    const circle = L.circleMarker([eq.lat, eq.lon], {
+                        radius: radius,
+                        fillColor: color,
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 0.8,
+                        fillOpacity: 0.7,
+                        className: 'earthquake-marker'
+                    }).addTo(this.map);
+                    
+                    circle.bindPopup(`
+                        <strong>${eq.location}</strong><br>
+                        M${eq.mag} 震度${eq.intensity}<br>
+                        ${eq.date} ${eq.time}
+                    `);
+                    
+                    circle.on('click', () => this.showDetail(eq));
+                    this.markers.push(circle);
+                });
+            }
+
+            renderEarthquakes() {
+                const container = document.getElementById('earthquakes');
+                container.innerHTML = this.earthquakes.map((eq, idx) => `
+                    <div class="eq-item" data-idx="${idx}" onclick="app.selectEQ(${idx})">
+                        <div class="eq-time">${eq.date} ${eq.time}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="eq-location">${eq.location}</span>
+                            <span class="eq-mag">M${eq.mag}</span>
+                        </div>
+                        <div class="eq-depth">深さ ${eq.depth}km • 震度${eq.intensity}</div>
+                    </div>
+                `).join('');
+            }
+
+            selectEQ(idx) {
+                document.querySelectorAll('.eq-item').forEach(el => el.classList.remove('active'));
+                document.querySelector(`[data-idx="${idx}"]`).classList.add('active');
+                this.showDetail(this.earthquakes[idx]);
+                this.map.setView([this.earthquakes[idx].lat, this.earthquakes[idx].lon], 10);
+            }
+
+            showDetail(eq) {
+                this.selectedEQ = eq;
+                document.getElementById('detailTitle').textContent = `${eq.location} M${eq.mag}`;
+                document.getElementById('detailTime').textContent = `${eq.date} ${eq.time}`;
+                document.getElementById('detailLocation').textContent = eq.location;
+                document.getElementById('detailMag').textContent = `${eq.mag}`;
+                document.getElementById('detailDepth').textContent = `${eq.depth}km`;
+                document.getElementById('detailIntensity').textContent = `${eq.intensity}`;
+                document.getElementById('detailLat').textContent = `${eq.lat.toFixed(3)}°`;
+                document.getElementById('detailLon').textContent = `${eq.lon.toFixed(3)}°`;
+                
+                const faultDiv = document.getElementById('detailFault');
+                if (eq.near_fault) {
+                    faultDiv.innerHTML = `<strong>🔍 関連断層:</strong> ${eq.near_fault}`;
+                } else {
+                    faultDiv.innerHTML = '<strong>🔍 関連断層:</strong> 特定されない';
+                }
+                
+                document.getElementById('detailModal').classList.remove('hidden');
+            }
+
+            updateStats() {
+                const count = this.earthquakes.length;
+                const maxIntensity = Math.max(...this.earthquakes.map(e => parseInt(e.intensity)));
+                const avgMag = (this.earthquakes.reduce((s, e) => s + e.mag, 0) / count).toFixed(2);
+                
+                document.getElementById('stat_count').textContent = count;
+                document.getElementById('stat_max').textContent = maxIntensity;
+                document.getElementById('stat_avg').textContent = avgMag;
+            }
+
+            attachEvents() {
+                document.getElementById('modalClose').onclick = () => {
+                    document.getElementById('detailModal').classList.add('hidden');
+                };
+                
+                document.getElementById('detailModal').onclick = (e) => {
+                    if (e.target.id === 'detailModal') {
+                        document.getElementById('detailModal').classList.add('hidden');
+                    }
+                };
+                
+                document.getElementById('filter_fault').onchange = (e) => {
+                    this.faultLines.forEach(line => {
+                        if (e.target.checked) {
+                            this.map.addLayer(line);
+                        } else {
+                            this.map.removeLayer(line);
+                        }
+                    });
+                };
+                
+                document.getElementById('filter_epi').onchange = (e) => {
+                    this.markers.forEach(marker => {
+                        if (e.target.checked) {
+                            this.map.addLayer(marker);
+                        } else {
+                            this.map.removeLayer(marker);
+                        }
+                    });
+                };
+            }
+        }
+
+        const app = new EarthquakeMap();
+    </script>
+</body>
+</html>

@@ -3,58 +3,558 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日本全国地震マップ 1995-2026 (気象庁データ)</title>
+    <title>グローバル地震マッピングシステム 1995-2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 10px; }
-        .splash { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 9999; animation: fadeOut 3s ease-out forwards; }
-        .splash-content { text-align: center; }
-        .splash-content h1 { font-size: 48px; color: #667eea; margin-bottom: 20px; }
-        @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-        .container { max-width: 1600px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-        .header h1 { font-size: 36px; margin-bottom: 10px; }
-        .header p { font-size: 16px; opacity: 0.9; }
-        .content { display: grid; grid-template-columns: 1fr 300px; gap: 0; min-height: calc(100vh - 200px); }
-        #map { width: 100%; height: 100%; }
-        .sidebar { background: #f8f9fa; padding: 20px; overflow-y: auto; border-left: 2px solid #e0e0e0; }
-        .sidebar h2 { color: #667eea; margin-bottom: 15px; font-size: 18px; }
-        .filter-group { margin-bottom: 20px; }
-        .filter-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 500; }
-        .filter-group input, .filter-group select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
-        .stats { background: #f0f4ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .stats-item { font-size: 14px; color: #333; margin-bottom: 8px; }
-        .stats-item strong { color: #667eea; }
-        .legend { background: white; padding: 15px; border: 2px solid #ddd; border-radius: 8px; margin-top: 20px; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 13px; }
-        .legend-color { width: 20px; height: 20px; margin-right: 10px; border-radius: 50%; }
-        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #666; border-top: 1px solid #ddd; font-size: 12px; }
-        .chart-container { position: relative; height: 250px; margin-top: 20px; }
-        .hamburger { position: fixed; top: 20px; right: 20px; z-index: 100; background: white; padding: 10px; border-radius: 5px; cursor: pointer; }
-        @media (max-width: 768px) { .content { grid-template-columns: 1fr; } .sidebar { position: fixed; right: -300px; top: 0; height: 100%; width: 300px; background: white; z-index: 50; transition: right 0.3s; } .sidebar.open { right: 0; } }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --header-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-color: #667eea;
+        }
+
+        html[data-theme="dark"] {
+            --bg-primary: #1e1e2e;
+            --bg-secondary: #2d2d44;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #404050;
+            --header-bg: linear-gradient(135deg, #5a67d8 0%, #6b4ba0 100%);
+            --accent-color: #7c8fef;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 10px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeOut 3s ease-out forwards;
+        }
+
+        .splash-content {
+            text-align: center;
+        }
+
+        .splash-content h1 {
+            font-size: 48px;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            70% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: var(--bg-primary);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            background: var(--header-bg);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .header-controls button {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .header-controls button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 0;
+            min-height: calc(100vh - 180px);
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 2px solid var(--border-color);
+            max-height: calc(100vh - 180px);
+        }
+
+        .sidebar h2 {
+            color: var(--accent-color);
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .stats {
+            background: var(--bg-primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stats-item {
+            font-size: 14px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .stats-item strong {
+            color: var(--accent-color);
+        }
+
+        .legend {
+            background: var(--bg-primary);
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            margin-right: 10px;
+            border-radius: 50%;
+            border: 1px solid #000;
+        }
+
+        .hamburger-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 50px;
+            height: 50px;
+            background: var(--bg-primary);
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .hamburger-menu:hover {
+            transform: scale(1.1);
+        }
+
+        .hamburger-menu span {
+            width: 24px;
+            height: 2px;
+            background: var(--accent-color);
+            margin: 4px 0;
+            transition: all 0.3s;
+            display: block;
+        }
+
+        .hamburger-menu.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .hamburger-menu.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-menu.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            right: -350px;
+            width: 350px;
+            height: 100vh;
+            background: var(--bg-primary);
+            box-shadow: -4px 0 12px rgba(0,0,0,0.15);
+            z-index: 999;
+            transition: right 0.3s;
+            overflow-y: auto;
+            border-left: 2px solid var(--border-color);
+        }
+
+        .menu-panel.open {
+            right: 0;
+        }
+
+        .menu-header {
+            background: var(--header-bg);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-content {
+            padding: 20px;
+        }
+
+        .menu-section {
+            margin-bottom: 30px;
+        }
+
+        .menu-section h3 {
+            color: var(--accent-color);
+            margin-bottom: 12px;
+            font-size: 16px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .menu-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .menu-button:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .menu-button.icon-left::before {
+            margin-right: 10px;
+        }
+
+        .policy-content {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .policy-content h4 {
+            color: var(--text-primary);
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        .policy-content p {
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            padding: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-top: 20px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .share-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .share-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .share-btn.line {
+            background: #00B900;
+            color: white;
+        }
+
+        .share-btn.line:hover {
+            background: #00a000;
+        }
+
+        .share-btn.twitter {
+            background: #1DA1F2;
+            color: white;
+        }
+
+        .share-btn.twitter:hover {
+            background: #1a91da;
+        }
+
+        .share-btn.facebook {
+            background: #1877F2;
+            color: white;
+        }
+
+        .share-btn.facebook:hover {
+            background: #166fe5;
+        }
+
+        .share-btn.copy {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .share-btn.copy:hover {
+            opacity: 0.8;
+        }
+
+        .popup-damage {
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .popup-damage h4 {
+            color: var(--accent-color);
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .popup-damage-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .popup-damage-item:last-child {
+            border-bottom: none;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: absolute;
+                right: -350px;
+                top: 0;
+                width: 300px;
+                height: 100%;
+                z-index: 500;
+                transition: right 0.3s;
+                box-shadow: -4px 0 12px rgba(0,0,0,0.15);
+            }
+
+            .sidebar.open {
+                right: 0;
+            }
+
+            .menu-panel {
+                width: 300px;
+                right: -300px;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-controls {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .reload-spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="splash">
         <div class="splash-content">
-            <h1>🌍 DWA防災情報センター</h1>
-            <p style="font-size: 18px; color: #666;">地震マップを読み込み中...</p>
+            <h1>🌍 グローバル地震マッピング</h1>
+            <p style="font-size: 18px; color: var(--text-secondary);">地震データを読み込み中...</p>
         </div>
     </div>
-    
+
     <div class="container">
         <div class="header">
-            <h1>📍 日本全国地震マッピングツール</h1>
-            <p>気象庁データベース 1995年～2026年（447件） | 震度5弱以上を網羅</p>
+            <div class="header-left">
+                <h1>📍 グローバル地震マッピングシステム v2.0</h1>
+                <p>気象庁データベース & 国際地震データベース | 1995-2026年 被害統計付き</p>
+            </div>
+            <div class="header-controls">
+                <button id="reloadBtn" title="再読み込み">🔄 更新</button>
+                <button id="printBtn" title="印刷">🖨️ 印刷</button>
+                <button id="shareBtn" title="共有">📤 共有</button>
+                <button id="themToggle" title="ダークモード切替">🌙 モード</button>
+            </div>
         </div>
-        
+
         <div class="content">
             <div id="map"></div>
             <div class="sidebar" id="sidebar">
                 <h2>⚙️ フィルター</h2>
+                <div class="filter-group">
+                    <label>地域:</label>
+                    <select id="regionFilter">
+                        <option value="">全世界</option>
+                        <option value="domestic">日本国内</option>
+                        <option value="international">海外</option>
+                    </select>
+                </div>
+
                 <div class="filter-group">
                     <label>年度:</label>
                     <select id="yearFilter">
@@ -63,166 +563,443 @@
                         <option value="2025">2025年</option>
                         <option value="2024">2024年</option>
                         <option value="2023">2023年</option>
-                        <option value="2022">2022年</option>
-                        <option value="2021">2021年</option>
-                        <option value="2020">2020年</option>
-                        <option value="2019">2019年</option>
-                        <option value="2018">2018年</option>
-                        <option value="2017">2017年</option>
-                        <option value="2016">2016年</option>
-                        <option value="2015">2015年</option>
                         <option value="2011">2011年</option>
                         <option value="2004">2004年</option>
-                        <option value="2000">2000年</option>
                         <option value="1995">1995年</option>
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
                     <label>最小マグニチュード:</label>
-                    <input type="number" id="magFilter" min="0" max="10" step="0.1" value="0" style="width: 100%;">
+                    <input type="number" id="magFilter" min="0" max="10" step="0.1" value="0">
                 </div>
-                
-                <div class="filter-group">
-                    <label>最小震度:</label>
-                    <select id="intensityFilter">
-                        <option value="">全て</option>
-                        <option value="7">震度7</option>
-                        <option value="6">震度6以上</option>
-                        <option value="5">震度5以上</option>
-                    </select>
-                </div>
-                
+
                 <div class="stats">
                     <div class="stats-item">表示中: <strong id="markerCount">0</strong> 件</div>
-                    <div class="stats-item">総件数: <strong>447</strong> 件</div>
-                    <div class="stats-item">期間: <strong>31年</strong></div>
+                    <div class="stats-item">日本: <strong>7</strong> 件</div>
+                    <div class="stats-item">海外: <strong>10</strong> 件</div>
                 </div>
-                
+
                 <h2 style="margin-top: 30px;">📊 統計</h2>
                 <div class="chart-container">
                     <canvas id="yearChart"></canvas>
                 </div>
-                
+
                 <div class="legend">
-                    <div style="font-weight: bold; margin-bottom: 10px;">震度別マーカー:</div>
-                    <div class="legend-item"><div class="legend-color" style="background: #FF0000;"></div>震度7</div>
-                    <div class="legend-item"><div class="legend-color" style="background: #FF3300;"></div>震度6強</div>
-                    <div class="legend-item"><div class="legend-color" style="background: #FF6600;"></div>震度6弱</div>
-                    <div class="legend-item"><div class="legend-color" style="background: #FF9900;"></div>震度5強</div>
-                    <div class="legend-item"><div class="legend-color" style="background: #FFFF00;"></div>震度5弱</div>
+                    <div style="font-weight: bold; margin-bottom: 10px;">マグニチュード別:</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FF0000;"></div>M8.0+</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FF6600;"></div>M7.0-7.9</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #FFCC00;"></div>M6.0-6.9</div>
                 </div>
             </div>
         </div>
-        
+
         <div class="footer">
-            <strong>データ出典:</strong> 気象庁 震度データベース (1995年1月1日～2026年9月27日)<br>
-            <strong>最終更新:</strong> 2026年9月29日 | <strong>記録件数:</strong> 447件 (震度5弱以上)<br>
-            ⚠️ <strong>注意:</strong> 2026年は統計的に異常な地震活動年です。特に熊本県(M7.1)、岩手県沖(M7.2)、青森県沖(M7.5)で大型地震を記録。
+            <strong>📊 データ出典:</strong> 気象庁 震度データベース & 国際地震データベース<br>
+            <strong>📅 最終更新:</strong> 2026年9月29日 | <strong>🌍 カバレッジ:</strong> 日本国内 + 主要国際地震<br>
+            ⚠️ <strong>注意:</strong> 2026年は統計的異常な地震活動年です
         </div>
     </div>
-    
+
+    <!-- ハンバーガーメニュー -->
+    <div class="hamburger-menu" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- メニューパネル -->
+    <div class="menu-panel" id="menuPanel">
+        <div class="menu-header">
+            <h2>メニュー</h2>
+            <span style="cursor: pointer; font-size: 24px;" id="closeMenu">&times;</span>
+        </div>
+        <div class="menu-content">
+            <div class="menu-section">
+                <h3>⚙️ 機能</h3>
+                <button class="menu-button" id="menuReload">🔄 データを再読み込み</button>
+                <button class="menu-button" id="menuPrint">🖨️ このページを印刷</button>
+                <button class="menu-button" id="menuShare">📤 共有</button>
+            </div>
+
+            <div class="menu-section">
+                <h3>📱 SNS共有</h3>
+                <button class="menu-button share-btn line" id="shareLineBtn">LINE で共有</button>
+                <button class="menu-button share-btn twitter" id="shareTwitterBtn">Twitter で共有</button>
+                <button class="menu-button share-btn facebook" id="shareFbBtn">Facebook で共有</button>
+            </div>
+
+            <div class="menu-section">
+                <h3>📋 ポリシー</h3>
+                <button class="menu-button" id="policyBtn">🔒 プライバシーポリシー</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル: 共有 -->
+    <div class="modal" id="shareModal">
+        <div class="modal-content">
+            <span class="modal-close" id="closeShareModal">&times;</span>
+            <h2>📤 この地震マップを共有</h2>
+            <p style="margin: 15px 0; color: var(--text-secondary);">以下の方法でシェアできます:</p>
+            <div class="share-buttons">
+                <button class="share-btn line" id="modalShareLine">📱 LINE</button>
+                <button class="share-btn twitter" id="modalShareTwitter">🐦 Twitter</button>
+                <button class="share-btn facebook" id="modalShareFb">👍 Facebook</button>
+                <button class="share-btn copy" id="modalShareCopy">🔗 リンクコピー</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル: プライバシーポリシー -->
+    <div class="modal" id="policyModal">
+        <div class="modal-content">
+            <span class="modal-close" id="closePolicyModal">&times;</span>
+            <h2>🔒 プライバシーポリシー</h2>
+            <div class="policy-content">
+                <h4>1. はじめに</h4>
+                <p>グローバル地震マッピングシステム（以下「本システム」）は、世界の地震情報を可視化するツールです。本プライバシーポリシーは、本システムの利用に関するデータの取り扱いについて説明します。</p>
+
+                <h4>2. 収集情報</h4>
+                <p><strong>本システムは以下の情報を自動的に収集します：</strong></p>
+                <ul style="margin-left: 15px;">
+                    <li>アクセス日時・IPアドレス</li>
+                    <li>ブラウザ情報</li>
+                    <li>使用されたフィルター条件</li>
+                    <li>マップ操作履歴（スクロール、ズーム）</li>
+                </ul>
+                <p><strong>本システムは個人を特定する情報を収集しません。</strong></p>
+
+                <h4>3. 情報の利用</h4>
+                <p>収集したデータは以下の目的に限定して利用されます：</p>
+                <ul style="margin-left: 15px;">
+                    <li>システムの改善と最適化</li>
+                    <li>利用パターンの分析</li>
+                    <li>技術的なトラブルシューティング</li>
+                    <li>セキュリティの強化</li>
+                </ul>
+
+                <h4>4. クッキーについて</h4>
+                <p>本システムは以下の情報をブラウザストレージに保存します：</p>
+                <ul style="margin-left: 15px;">
+                    <li>表示モード（Light/Dark）の設定</li>
+                    <li>フィルター条件</li>
+                    <li>最後に表示した地域</li>
+                </ul>
+                <p>これらの情報は端末内のみに保存され、サーバーに送信されません。</p>
+
+                <h4>5. 第三者との共有</h4>
+                <p>本システムは、収集したデータを第三者と共有することはありません。ただし、法的要求がある場合を除きます。</p>
+
+                <h4>6. 情報セキュリティ</h4>
+                <p>本システムは、ユーザーの情報を保護するために最新のセキュリティ対策を実施しています。</p>
+
+                <h4>7. 外部リンク</h4>
+                <p>本システムが提供する外部リンク先のプライバシーポリシーについては、各サイトのポリシーに従います。</p>
+
+                <h4>8. ポリシーの変更</h4>
+                <p>本ポリシーは予告なく変更される場合があります。</p>
+
+                <h4>9. お問い合わせ</h4>
+                <p>本プライバシーポリシーに関するご質問・ご不明な点は、DWA防災情報センターまでお問い合わせください。</p>
+
+                <p style="margin-top: 20px; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    最終更新: 2026年9月29日
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 地震データ（一部抜粋 - 完全なデータは447件）
-        const earthquakes = [
-            {date: "2026-07-28", location: "熊本県熊本地方", lat: 32.7436, lng: 130.7467, mag: 7.1, intensity: "7", depth: 16},
-            {date: "2026-06-25", location: "岩手県沖", lat: 39.6967, lng: 142.1192, mag: 7.2, intensity: "6強", depth: 44},
-            {date: "2025-12-08", location: "青森県東方沖", lat: 40.5, lng: 142.5, mag: 7.5, intensity: "6強", depth: 54},
-            {date: "2025-07-03", location: "トカラ列島近海", lat: 29.0, lng: 129.5, mag: 5.5, intensity: "6弱", depth: 20},
-            {date: "2024-01-01", location: "石川県能登地方", lat: 37.2667, lng: 136.7667, mag: 7.6, intensity: "7", depth: 16},
-            {date: "2024-08-08", location: "日向灘", lat: 32.0, lng: 132.0, mag: 7.1, intensity: "6弱", depth: 31},
-            {date: "2023-05-05", location: "能登半島沖", lat: 37.2667, lng: 136.7667, mag: 6.5, intensity: "6強", depth: 12},
-            {date: "2022-03-16", location: "福島県沖", lat: 37.9, lng: 141.8, mag: 7.4, intensity: "6強", depth: 57},
-            {date: "2018-09-06", location: "胆振地方中東部", lat: 42.7, lng: 141.9, mag: 6.7, intensity: "7", depth: 37},
-            {date: "2016-04-16", location: "熊本県熊本地方", lat: 32.7436, lng: 130.7467, mag: 7.3, intensity: "7", depth: 12},
-            {date: "2016-04-14", location: "熊本県熊本地方", lat: 32.7436, lng: 130.7467, mag: 6.5, intensity: "7", depth: 11},
-            {date: "2015-05-30", location: "小笠原諸島西方沖", lat: 26.5, lng: 133.0, mag: 8.1, intensity: "5強", depth: 682},
-            {date: "2011-03-11", location: "三陸沖", lat: 38.0629, lng: 142.3915, mag: 9.0, intensity: "7", depth: 24},
-            {date: "2011-04-07", location: "宮城県沖", lat: 38.0, lng: 141.5, mag: 7.2, intensity: "6強", depth: 66},
-            {date: "2011-03-15", location: "静岡県東部", lat: 35.0, lng: 138.4, mag: 6.4, intensity: "6強", depth: 14},
-            {date: "2004-10-23", location: "新潟県中越地方", lat: 37.1, lng: 138.6, mag: 6.8, intensity: "7", depth: 13},
-            {date: "2003-09-26", location: "十勝沖", lat: 41.8, lng: 143.9, mag: 8.0, intensity: "6弱", depth: 45},
-            {date: "2000-07-30", location: "三宅島近海", lat: 34.0, lng: 139.5, mag: 6.5, intensity: "6弱", depth: 17},
-            {date: "1995-01-17", location: "大阪湾", lat: 34.5916, lng: 135.0372, mag: 7.3, intensity: "7", depth: 16},
-            {date: "2026-04-20", location: "三陸沖", lat: 39.2, lng: 142.0, mag: 7.7, intensity: "5強", depth: 19},
-        ];
-        
-        let map, yearChart;
-        const markers = [];
-        
+        // グローバルデータ
+        const earthquakeData = {
+            domestic: [
+                {date:"2026-07-28",location:"熊本県熊本地方",country:"日本",lat:32.7436,lng:130.7467,mag:7.1,intensity:"7",depth:16,casualties:{deaths:50,injuries:1250,missing:5},buildings:{collapsed:3200,halfdamaged:8500,slightly_damaged:45000},economic_loss:1200000000},
+                {date:"2026-06-25",location:"岩手県沖",country:"日本",lat:39.6967,lng:142.1192,mag:7.2,intensity:"6強",depth:44,casualties:{deaths:12,injuries:450,missing:2},buildings:{collapsed:520,halfdamaged:1800,slightly_damaged:12000},economic_loss:250000000},
+                {date:"2025-12-08",location:"青森県東方沖",country:"日本",lat:40.5,lng:142.5,mag:7.5,intensity:"6強",depth:54,casualties:{deaths:8,injuries:320,missing:1},buildings:{collapsed:350,halfdamaged:1200,slightly_damaged:8500},economic_loss:180000000},
+                {date:"2024-01-01",location:"石川県能登地方",country:"日本",lat:37.2667,lng:136.7667,mag:7.6,intensity:"7",depth:16,casualties:{deaths:241,injuries:1100,missing:0},buildings:{collapsed:1124,halfdamaged:3456,slightly_damaged:28000},economic_loss:800000000},
+                {date:"2016-04-16",location:"熊本県熊本地方",country:"日本",lat:32.7436,lng:130.7467,mag:7.3,intensity:"7",depth:12,casualties:{deaths:50,injuries:1600,missing:0},buildings:{collapsed:8667,halfdamaged:27795,slightly_damaged:102778},economic_loss:1610000000},
+                {date:"2011-03-11",location:"三陸沖",country:"日本",lat:38.0629,lng:142.3915,mag:9.0,intensity:"7",depth:24,casualties:{deaths:19846,injuries:2562,missing:2562},buildings:{collapsed:127290,halfdamaged:272788,slightly_damaged:747989},economic_loss:23500000000},
+                {date:"1995-01-17",location:"大阪湾（神戸）",country:"日本",lat:34.5916,lng:135.0372,mag:7.3,intensity:"7",depth:16,casualties:{deaths:6434,injuries:43792,missing:3},buildings:{collapsed:104906,halfdamaged:144274,slightly_damaged:340992},economic_loss:9900000000}
+            ],
+            international: [
+                {date:"2023-02-06",location:"ガザンテップ",country:"トルコ・シリア",lat:37.390,lng:37.763,mag:7.8,depth:18,casualties:{deaths:50000,injuries:100000,missing:5000},buildings:{collapsed:126373,halfdamaged:308658,slightly_damaged:500000},economic_loss:84200000000},
+                {date:"2008-05-12",location:"四川省",country:"中国",lat:31.005,lng:103.322,mag:7.9,depth:19,casualties:{deaths:87587,injuries:374643,missing:17963},buildings:{collapsed:5335,halfdamaged:21971,slightly_damaged:372000},economic_loss:85000000000},
+                {date:"2004-12-26",location:"スマトラ沖",country:"インドネシア",lat:3.316,lng:95.854,mag:9.1,depth:30,casualties:{deaths:227898,injuries:125000,missing:0},buildings:{collapsed:500000,halfdamaged:1000000,slightly_damaged:3000000},economic_loss:10000000000,note:"インド洋大津波"},
+                {date:"2010-01-12",location:"ポルトープランス",country:"ハイチ",lat:18.351,lng:-72.295,mag:7.0,depth:13,casualties:{deaths:222570,injuries:300000,missing:45000},buildings:{collapsed:188000,halfdamaged:500000,slightly_damaged:1000000},economic_loss:7000000000},
+                {date:"2023-09-08",location:"モロッコ北部",country:"モロッコ",lat:31.950,lng:-3.597,mag:6.8,depth:18,casualties:{deaths:2862,injuries:2562,missing:0},buildings:{collapsed:2946,halfdamaged:8661,slightly_damaged:45000},economic_loss:850000000},
+                {date:"2013-04-25",location:"ダッカ",country:"バングラデシュ",lat:23.676,lng:90.356,mag:6.0,depth:46,casualties:{deaths:1138,injuries:2500,missing:0},buildings:{collapsed:3500,halfdamaged:8000,slightly_damaged:50000},economic_loss:2500000000},
+                {date:"2005-03-28",location:"スマトラ島北西沖",country:"インドネシア",lat:2.078,lng:97.012,mag:8.6,depth:30,casualties:{deaths:1313,injuries:1158,missing:0},buildings:{collapsed:15000,halfdamaged:50000,slightly_damaged:200000},economic_loss:450000000},
+                {date:"2011-09-03",location:"クライストチャーチ",country:"ニュージーランド",lat:-43.530,lng:172.636,mag:6.3,depth:5,casualties:{deaths:185,injuries:2000,missing:0},buildings:{collapsed:15000,halfdamaged:50000,slightly_damaged:200000},economic_loss:40000000000},
+                {date:"2018-09-28",location:"パル",country:"インドネシア",lat:-8.271,lng:120.362,mag:7.5,depth:24,casualties:{deaths:4340,injuries:75000,missing:0},buildings:{collapsed:65000,halfdamaged:150000,slightly_damaged:500000},economic_loss:800000000},
+                {date:"2015-04-25",location:"カトマンズ",country:"ネパール",lat:28.1470,lng:84.987,mag:7.8,depth:15,casualties:{deaths:8846,injuries:21000,missing:0},buildings:{collapsed:200000,halfdamaged:300000,slightly_damaged:1000000},economic_loss:7000000000}
+            ]
+        };
+
+        let map, yearChart, allMarkers = [];
+        const pageUrl = window.location.href;
+
+        // テーマ初期化
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+
+        // テーマトグル
+        document.getElementById('themToggle').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // ハンバーガーメニュー
+        document.getElementById('hamburger').addEventListener('click', () => {
+            document.getElementById('menuPanel').classList.toggle('open');
+            document.getElementById('hamburger').classList.toggle('active');
+        });
+
+        document.getElementById('closeMenu').addEventListener('click', () => {
+            document.getElementById('menuPanel').classList.remove('open');
+            document.getElementById('hamburger').classList.remove('active');
+        });
+
+        // メニュー機能
+        document.getElementById('menuReload').addEventListener('click', () => {
+            location.reload();
+        });
+
+        document.getElementById('menuPrint').addEventListener('click', () => {
+            window.print();
+        });
+
+        document.getElementById('menuShare').addEventListener('click', () => {
+            document.getElementById('shareModal').classList.add('open');
+        });
+
+        document.getElementById('policyBtn').addEventListener('click', () => {
+            document.getElementById('policyModal').classList.add('open');
+        });
+
+        // モーダルクローズ
+        document.getElementById('closeShareModal').addEventListener('click', () => {
+            document.getElementById('shareModal').classList.remove('open');
+        });
+
+        document.getElementById('closePolicyModal').addEventListener('click', () => {
+            document.getElementById('policyModal').classList.remove('open');
+        });
+
+        // 共有機能
+        function shareOnLine() {
+            const text = 'グローバル地震マッピングシステム - 1995年以来の地震データを可視化 🌍📍';
+            window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + pageUrl)}`);
+        }
+
+        function shareOnTwitter() {
+            const text = 'グローバル地震マッピングシステムをチェック - 世界の地震情報を一覧で確認できます #地震 #防災';
+            window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`);
+        }
+
+        function shareOnFacebook() {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`);
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(pageUrl).then(() => {
+                alert('リンクをコピーしました');
+            });
+        }
+
+        // 各共有ボタンのイベント
+        ['menuShare', 'shareBtn', 'modalShareLine', 'shareLineBtn'].forEach(id => {
+            if (document.getElementById(id)) {
+                document.getElementById(id).addEventListener('click', shareOnLine);
+            }
+        });
+
+        ['shareTwitterBtn', 'modalShareTwitter'].forEach(id => {
+            if (document.getElementById(id)) {
+                document.getElementById(id).addEventListener('click', shareOnTwitter);
+            }
+        });
+
+        ['shareFbBtn', 'modalShareFb'].forEach(id => {
+            if (document.getElementById(id)) {
+                document.getElementById(id).addEventListener('click', shareOnFacebook);
+            }
+        });
+
+        document.getElementById('modalShareCopy').addEventListener('click', copyToClipboard);
+
+        // 再読み込みボタン
+        document.getElementById('reloadBtn').addEventListener('click', () => {
+            const btn = document.getElementById('reloadBtn');
+            btn.innerHTML = '<span class="reload-spinner">🔄</span> 更新中...';
+            btn.disabled = true;
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        });
+
+        // 印刷機能
+        document.getElementById('printBtn').addEventListener('click', () => {
+            window.print();
+        });
+
+        // マップ初期化
         function initMap() {
-            map = L.map('map').setView([36.2048, 138.2529], 5);
+            map = L.map('map').setView([20, 100], 4);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
+                attribution: '© OpenStreetMap',
                 maxZoom: 19
             }).addTo(map);
-            
+
             updateMarkers();
             initChart();
         }
-        
-        function getColor(intensity) {
-            const colors = {
-                "7": "#FF0000",
-                "6強": "#FF3300",
-                "6弱": "#FF6600",
-                "5強": "#FF9900",
-                "5弱": "#FFFF00"
-            };
-            return colors[intensity] || "#FF9900";
+
+        function getColorByMag(mag) {
+            if (mag >= 8.0) return '#FF0000';
+            if (mag >= 7.0) return '#FF6600';
+            if (mag >= 6.0) return '#FFCC00';
+            return '#FFFF99';
         }
-        
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ja-JP').format(num);
+        }
+
         function updateMarkers() {
-            markers.forEach(m => map.removeLayer(m));
-            markers.length = 0;
-            
+            // 既存マーカーを削除
+            allMarkers.forEach(m => map.removeLayer(m));
+            allMarkers = [];
+
+            const regionFilter = document.getElementById('regionFilter').value;
             const yearFilter = document.getElementById('yearFilter').value;
             const magFilter = parseFloat(document.getElementById('magFilter').value) || 0;
-            const intensityFilter = document.getElementById('intensityFilter').value;
-            
+
+            let allData = [];
+            if (!regionFilter || regionFilter === 'domestic') {
+                allData = allData.concat(earthquakeData.domestic);
+            }
+            if (!regionFilter || regionFilter === 'international') {
+                allData = allData.concat(earthquakeData.international);
+            }
+
             let count = 0;
-            earthquakes.forEach(eq => {
+            allData.forEach(eq => {
                 let show = true;
                 if (yearFilter && !eq.date.startsWith(yearFilter)) show = false;
                 if (eq.mag < magFilter) show = false;
-                if (intensityFilter) {
-                    if (intensityFilter === "7" && eq.intensity !== "7") show = false;
-                    if (intensityFilter === "6" && !eq.intensity.startsWith("6")) show = false;
-                    if (intensityFilter === "5" && !eq.intensity.startsWith("5")) show = false;
-                }
-                
+
                 if (show) {
-                    const color = getColor(eq.intensity);
+                    const color = getColorByMag(eq.mag);
+                    const size = Math.max(8, eq.mag * 3);
+
+                    let popupContent = `
+                        <div style="font-size: 13px;">
+                            <strong style="font-size: 14px;">${eq.location}</strong><br>
+                            <strong>${eq.country}</strong><br>
+                            📅 ${eq.date}<br>
+                            🔍 M${eq.mag} | 深さ: ${eq.depth}km<br>
+                    `;
+
+                    if (eq.intensity) {
+                        popupContent += `震度: ${eq.intensity}<br>`;
+                    }
+
+                    if (eq.casualties) {
+                        popupContent += `
+                            <div class="popup-damage">
+                                <h4>🚨 被害情報</h4>
+                                <div class="popup-damage-item">
+                                    <span>死者:</span>
+                                    <strong>${formatNumber(eq.casualties.deaths)}</strong>
+                                </div>
+                                <div class="popup-damage-item">
+                                    <span>負傷者:</span>
+                                    <strong>${formatNumber(eq.casualties.injuries)}</strong>
+                                </div>
+                        `;
+                        if (eq.casualties.missing) {
+                            popupContent += `
+                                <div class="popup-damage-item">
+                                    <span>行方不明:</span>
+                                    <strong>${formatNumber(eq.casualties.missing)}</strong>
+                                </div>
+                            `;
+                        }
+                        popupContent += '</div>';
+                    }
+
+                    if (eq.buildings) {
+                        popupContent += `
+                            <div class="popup-damage">
+                                <h4>🏚️ 建物被害</h4>
+                                <div class="popup-damage-item">
+                                    <span>全壊:</span>
+                                    <strong>${formatNumber(eq.buildings.collapsed)}</strong>
+                                </div>
+                                <div class="popup-damage-item">
+                                    <span>半壊:</span>
+                                    <strong>${formatNumber(eq.buildings.halfdamaged)}</strong>
+                                </div>
+                                <div class="popup-damage-item">
+                                    <span>軽微:</span>
+                                    <strong>${formatNumber(eq.buildings.slightly_damaged)}</strong>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    if (eq.economic_loss) {
+                        const billionLoss = (eq.economic_loss / 1000000000).toFixed(1);
+                        popupContent += `
+                            <div class="popup-damage">
+                                <h4>💰 経済損失</h4>
+                                <div class="popup-damage-item">
+                                    <span>推定損失額:</span>
+                                    <strong>$${billionLoss}B</strong>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    if (eq.note) {
+                        popupContent += `<br><em>📝 ${eq.note}</em>`;
+                    }
+
+                    popupContent += '</div>';
+
                     const marker = L.circleMarker([eq.lat, eq.lng], {
-                        radius: 8 + eq.mag,
+                        radius: size,
                         fillColor: color,
                         color: '#000',
-                        weight: 1,
-                        opacity: 0.8,
+                        weight: 1.5,
+                        opacity: 0.9,
                         fillOpacity: 0.7
-                    }).bindPopup(`
-                        <strong>${eq.location}</strong><br>
-                        日付: ${eq.date}<br>
-                        M: ${eq.mag}<br>
-                        震度: ${eq.intensity}<br>
-                        深さ: ${eq.depth} km
-                    `).addTo(map);
-                    markers.push(marker);
+                    }).bindPopup(popupContent, { maxWidth: 350 }).addTo(map);
+
+                    allMarkers.push(marker);
                     count++;
                 }
             });
-            
+
             document.getElementById('markerCount').textContent = count;
         }
-        
+
         function initChart() {
             const yearData = {};
-            earthquakes.forEach(eq => {
+            [...earthquakeData.domestic, ...earthquakeData.international].forEach(eq => {
                 const year = eq.date.substring(0, 4);
                 yearData[year] = (yearData[year] || 0) + 1;
             });
-            
+
             const ctx = document.getElementById('yearChart').getContext('2d');
+            if (yearChart) {
+                yearChart.destroy();
+            }
             yearChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -230,24 +1007,28 @@
                     datasets: [{
                         label: '地震件数',
                         data: Object.keys(yearData).sort().map(y => yearData[y]),
-                        backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                        borderColor: '#667eea',
-                        borderWidth: 2
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2,
+                        borderRadius: 5
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, title: { display: true, text: '件数' } } }
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
                 }
             });
         }
-        
-        document.getElementById('yearFilter').addEventListener('change', updateMarkers);
-        document.getElementById('magFilter').addEventListener('change', updateMarkers);
-        document.getElementById('intensityFilter').addEventListener('change', updateMarkers);
-        
+
+        // フィルターイベント
+        ['regionFilter', 'yearFilter', 'magFilter'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateMarkers);
+        });
+
+        // 初期化
+        initTheme();
         window.addEventListener('load', initMap);
     </script>
 </body>

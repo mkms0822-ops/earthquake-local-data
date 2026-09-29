@@ -314,12 +314,26 @@
             text-align: left;
             font-size: 14px;
             transition: all 0.3s;
+            text-decoration: none;
         }
 
         .menu-button:hover {
             background: var(--accent-color);
             color: white;
             border-color: var(--accent-color);
+        }
+
+        a.menu-button {
+            text-decoration: none;
+        }
+
+        a.menu-button:visited {
+            color: var(--text-primary);
+        }
+
+        a.menu-button:hover {
+            background: var(--accent-color);
+            color: white;
         }
 
         .policy-content {
@@ -638,6 +652,52 @@
             <div class="menu-section">
                 <h3>📋 ポリシー</h3>
                 <button class="menu-button" id="policyBtn">🔒 プライバシーポリシー</button>
+            </div>
+
+            <div class="menu-section">
+                <h3>🌐 DWA防災情報センター</h3>
+                <a href="https://bousai0111.info/" target="_blank" class="menu-button" style="text-decoration: none; display: flex; align-items: center;">
+                    ホームページ
+                </a>
+                <a href="https://bousai0111.info/column/" target="_blank" class="menu-button" style="text-decoration: none;">
+                    📰 コラム（災害関連情報）
+                </a>
+                <a href="https://bousai0111.info/contact.html" target="_blank" class="menu-button" style="text-decoration: none;">
+                    📧 お問い合わせ
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <h3>🚨 緊急対応ツール</h3>
+                <a href="https://bousai0111.info/Manual.html" target="_blank" class="menu-button" style="text-decoration: none;">
+                    📖 緊急対応マニュアル
+                </a>
+                <a href="https://bousai0111.info/#sos" target="_blank" class="menu-button" style="text-decoration: none;">
+                    📍 SOSビーコン
+                </a>
+                <a href="https://bousai0111.info/#near" target="_blank" class="menu-button" style="text-decoration: none;">
+                    🗺️ 近くを探す
+                </a>
+                <a href="https://bousai0111.info/drill.html" target="_blank" class="menu-button" style="text-decoration: none;">
+                    🎯 防災訓練ルーム
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <h3>🌧️ シミュレーション</h3>
+                <a href="https://mkms0822-ops.github.io/rainsimulator/" target="_blank" class="menu-button" style="text-decoration: none;">
+                    🌧️ レインシミュレーター
+                </a>
+            </div>
+
+            <div class="menu-section">
+                <h3>⚠️ リスク診断</h3>
+                <a href="https://mkms0822-ops.github.io/jishinrisuku/" target="_blank" class="menu-button" style="text-decoration: none;">
+                    📊 地震リスク診断ツール
+                </a>
+                <a href="https://mkms0822-ops.github.io/nankaitorafutunamisinndann/" target="_blank" class="menu-button" style="text-decoration: none;">
+                    🌊 南海トラフ津波診断
+                </a>
             </div>
         </div>
     </div>

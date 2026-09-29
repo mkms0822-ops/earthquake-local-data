@@ -19,7 +19,11 @@
         "halfdamaged": 8500,
         "slightly_damaged": 45000
       },
-      "economic_loss": 1200000000
+      "economic_loss": {
+        "usd": 1200000000,
+        "jpy": 180000000000,
+        "display": "$1.2B / ¥180B"
+      }
     },
     {
       "date": "2026-06-25",
@@ -40,7 +44,11 @@
         "halfdamaged": 1800,
         "slightly_damaged": 12000
       },
-      "economic_loss": 250000000
+      "economic_loss": {
+        "usd": 250000000,
+        "jpy": 37500000000,
+        "display": "$250M / ¥37.5B"
+      }
     },
     {
       "date": "2025-12-08",
@@ -61,7 +69,11 @@
         "halfdamaged": 1200,
         "slightly_damaged": 8500
       },
-      "economic_loss": 180000000
+      "economic_loss": {
+        "usd": 180000000,
+        "jpy": 27000000000,
+        "display": "$180M / ¥27B"
+      }
     },
     {
       "date": "2024-01-01",
@@ -82,7 +94,11 @@
         "halfdamaged": 3456,
         "slightly_damaged": 28000
       },
-      "economic_loss": 800000000
+      "economic_loss": {
+        "usd": 800000000,
+        "jpy": 120000000000,
+        "display": "$800M / ¥120B"
+      }
     },
     {
       "date": "2016-04-16",
@@ -103,7 +119,11 @@
         "halfdamaged": 27795,
         "slightly_damaged": 102778
       },
-      "economic_loss": 1610000000
+      "economic_loss": {
+        "usd": 1610000000,
+        "jpy": 241500000000,
+        "display": "$1.61B / ¥241.5B"
+      }
     },
     {
       "date": "2011-03-11",
@@ -124,7 +144,11 @@
         "halfdamaged": 272788,
         "slightly_damaged": 747989
       },
-      "economic_loss": 23500000000
+      "economic_loss": {
+        "usd": 235000000000,
+        "jpy": 35250000000000,
+        "display": "$235B / ¥3.525T"
+      }
     },
     {
       "date": "1995-01-17",
@@ -145,46 +169,14 @@
         "halfdamaged": 144274,
         "slightly_damaged": 340992
       },
-      "economic_loss": 9900000000
+      "economic_loss": {
+        "usd": 9900000000,
+        "jpy": 1485000000000,
+        "display": "$9.9B / ¥1.485T"
+      }
     }
   ],
   "international": [
-    {
-      "date": "2024-12-26",
-      "location": "スマトラ島西部沖",
-      "country": "インドネシア",
-      "lat": 3.316,
-      "lng": 95.854,
-      "mag": 9.1,
-      "depth": 30,
-      "casualties": {
-        "deaths": 230000,
-        "injuries": 125000,
-        "missing": 43128
-      },
-      "economic_loss": 9600000000,
-      "note": "インド洋大津波"
-    },
-    {
-      "date": "2024-05-12",
-      "location": "四川省中部",
-      "country": "中国",
-      "lat": 31.005,
-      "lng": 103.322,
-      "mag": 7.9,
-      "depth": 19,
-      "casualties": {
-        "deaths": 87587,
-        "injuries": 374643,
-        "missing": 17963
-      },
-      "buildings": {
-        "collapsed": 5335,
-        "halfdamaged": 21971,
-        "slightly_damaged": 372000
-      },
-      "economic_loss": 85000000000
-    },
     {
       "date": "2023-02-06",
       "location": "ガザンテップ",
@@ -203,104 +195,11 @@
         "halfdamaged": 308658,
         "slightly_damaged": 500000
       },
-      "economic_loss": 84200000000
-    },
-    {
-      "date": "2011-03-11",
-      "location": "太平洋沖（三陸沖）",
-      "country": "日本",
-      "lat": 38.297,
-      "lng": 142.372,
-      "mag": 9.0,
-      "depth": 29,
-      "casualties": {
-        "deaths": 19846,
-        "injuries": 2562,
-        "missing": 2562
-      },
-      "economic_loss": 235000000000,
-      "note": "大津波被害を含む"
-    },
-    {
-      "date": "2010-01-12",
-      "location": "ポルトープランス",
-      "country": "ハイチ",
-      "lat": 18.351,
-      "lng": -72.295,
-      "mag": 7.0,
-      "depth": 13,
-      "casualties": {
-        "deaths": 222570,
-        "injuries": 300000,
-        "missing": 45000
-      },
-      "buildings": {
-        "collapsed": 188000,
-        "halfdamaged": 500000,
-        "slightly_damaged": 1000000
-      },
-      "economic_loss": 7000000000
-    },
-    {
-      "date": "2004-12-26",
-      "location": "スマトラ沖",
-      "country": "インドネシア",
-      "lat": 3.316,
-      "lng": 95.854,
-      "mag": 9.1,
-      "depth": 30,
-      "casualties": {
-        "deaths": 227898,
-        "injuries": 125000,
-        "missing": 0
-      },
-      "buildings": {
-        "collapsed": 500000,
-        "halfdamaged": 1000000,
-        "slightly_damaged": 3000000
-      },
-      "economic_loss": 10000000000,
-      "note": "インド洋大津波 - 世界最大級"
-    },
-    {
-      "date": "2023-09-08",
-      "location": "モロッコ北部",
-      "country": "モロッコ",
-      "lat": 31.950,
-      "lng": -3.597,
-      "mag": 6.8,
-      "depth": 18,
-      "casualties": {
-        "deaths": 2862,
-        "injuries": 2562,
-        "missing": 0
-      },
-      "buildings": {
-        "collapsed": 2946,
-        "halfdamaged": 8661,
-        "slightly_damaged": 45000
-      },
-      "economic_loss": 850000000
-    },
-    {
-      "date": "2013-04-25",
-      "location": "ダッカ",
-      "country": "バングラデシュ",
-      "lat": 23.676,
-      "lng": 90.356,
-      "mag": 6.0,
-      "depth": 46,
-      "casualties": {
-        "deaths": 1138,
-        "injuries": 2500,
-        "missing": 0
-      },
-      "buildings": {
-        "collapsed": 3500,
-        "halfdamaged": 8000,
-        "slightly_damaged": 50000
-      },
-      "economic_loss": 2500000000
+      "economic_loss": {
+        "usd": 84200000000,
+        "jpy": 12630000000000,
+        "display": "$84.2B / ¥1.263T"
+      }
     },
     {
       "date": "2008-05-12",
@@ -320,7 +219,108 @@
         "halfdamaged": 21971,
         "slightly_damaged": 372000
       },
-      "economic_loss": 85000000000
+      "economic_loss": {
+        "usd": 85000000000,
+        "jpy": 12750000000000,
+        "display": "$85B / ¥1.275T"
+      }
+    },
+    {
+      "date": "2004-12-26",
+      "location": "スマトラ沖",
+      "country": "インドネシア",
+      "lat": 3.316,
+      "lng": 95.854,
+      "mag": 9.1,
+      "depth": 30,
+      "casualties": {
+        "deaths": 227898,
+        "injuries": 125000,
+        "missing": 0
+      },
+      "buildings": {
+        "collapsed": 500000,
+        "halfdamaged": 1000000,
+        "slightly_damaged": 3000000
+      },
+      "economic_loss": {
+        "usd": 10000000000,
+        "jpy": 1500000000000,
+        "display": "$10B / ¥1.5T"
+      },
+      "note": "インド洋大津波"
+    },
+    {
+      "date": "2010-01-12",
+      "location": "ポルトープランス",
+      "country": "ハイチ",
+      "lat": 18.351,
+      "lng": -72.295,
+      "mag": 7.0,
+      "depth": 13,
+      "casualties": {
+        "deaths": 222570,
+        "injuries": 300000,
+        "missing": 45000
+      },
+      "buildings": {
+        "collapsed": 188000,
+        "halfdamaged": 500000,
+        "slightly_damaged": 1000000
+      },
+      "economic_loss": {
+        "usd": 7000000000,
+        "jpy": 1050000000000,
+        "display": "$7B / ¥1.05T"
+      }
+    },
+    {
+      "date": "2023-09-08",
+      "location": "モロッコ北部",
+      "country": "モロッコ",
+      "lat": 31.950,
+      "lng": -3.597,
+      "mag": 6.8,
+      "depth": 18,
+      "casualties": {
+        "deaths": 2862,
+        "injuries": 2562,
+        "missing": 0
+      },
+      "buildings": {
+        "collapsed": 2946,
+        "halfdamaged": 8661,
+        "slightly_damaged": 45000
+      },
+      "economic_loss": {
+        "usd": 850000000,
+        "jpy": 127500000000,
+        "display": "$850M / ¥127.5B"
+      }
+    },
+    {
+      "date": "2013-04-25",
+      "location": "ダッカ",
+      "country": "バングラデシュ",
+      "lat": 23.676,
+      "lng": 90.356,
+      "mag": 6.0,
+      "depth": 46,
+      "casualties": {
+        "deaths": 1138,
+        "injuries": 2500,
+        "missing": 0
+      },
+      "buildings": {
+        "collapsed": 3500,
+        "halfdamaged": 8000,
+        "slightly_damaged": 50000
+      },
+      "economic_loss": {
+        "usd": 2500000000,
+        "jpy": 375000000000,
+        "display": "$2.5B / ¥375B"
+      }
     },
     {
       "date": "2005-03-28",
@@ -340,7 +340,87 @@
         "halfdamaged": 50000,
         "slightly_damaged": 200000
       },
-      "economic_loss": 450000000
+      "economic_loss": {
+        "usd": 450000000,
+        "jpy": 67500000000,
+        "display": "$450M / ¥67.5B"
+      }
+    },
+    {
+      "date": "2011-09-03",
+      "location": "クライストチャーチ",
+      "country": "ニュージーランド",
+      "lat": -43.530,
+      "lng": 172.636,
+      "mag": 6.3,
+      "depth": 5,
+      "casualties": {
+        "deaths": 185,
+        "injuries": 2000,
+        "missing": 0
+      },
+      "buildings": {
+        "collapsed": 15000,
+        "halfdamaged": 50000,
+        "slightly_damaged": 200000
+      },
+      "economic_loss": {
+        "usd": 40000000000,
+        "jpy": 6000000000000,
+        "display": "$40B / ¥6T"
+      }
+    },
+    {
+      "date": "2018-09-28",
+      "location": "パル",
+      "country": "インドネシア",
+      "lat": -8.271,
+      "lng": 120.362,
+      "mag": 7.5,
+      "depth": 24,
+      "casualties": {
+        "deaths": 4340,
+        "injuries": 75000,
+        "missing": 0
+      },
+      "buildings": {
+        "collapsed": 65000,
+        "halfdamaged": 150000,
+        "slightly_damaged": 500000
+      },
+      "economic_loss": {
+        "usd": 800000000,
+        "jpy": 120000000000,
+        "display": "$800M / ¥120B"
+      }
+    },
+    {
+      "date": "2015-04-25",
+      "location": "カトマンズ",
+      "country": "ネパール",
+      "lat": 28.1470,
+      "lng": 84.987,
+      "mag": 7.8,
+      "depth": 15,
+      "casualties": {
+        "deaths": 8846,
+        "injuries": 21000,
+        "missing": 0
+      },
+      "buildings": {
+        "collapsed": 200000,
+        "halfdamaged": 300000,
+        "slightly_damaged": 1000000
+      },
+      "economic_loss": {
+        "usd": 7000000000,
+        "jpy": 1050000000000,
+        "display": "$7B / ¥1.05T"
+      }
     }
-  ]
+  ],
+  "exchange_rate": {
+    "note": "1ドル = 150円で換算",
+    "updated": "2026-09-29"
+  }
 }

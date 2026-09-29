@@ -322,10 +322,6 @@
             border-color: var(--accent-color);
         }
 
-        .menu-button.icon-left::before {
-            margin-right: 10px;
-        }
-
         .policy-content {
             font-size: 13px;
             line-height: 1.6;
@@ -459,6 +455,7 @@
             color: var(--accent-color);
             margin-top: 10px;
             margin-bottom: 5px;
+            font-size: 12px;
         }
 
         .popup-damage-item {
@@ -470,6 +467,14 @@
 
         .popup-damage-item:last-child {
             border-bottom: none;
+        }
+
+        .currency-note {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed var(--border-color);
         }
 
         @media (max-width: 768px) {
@@ -531,8 +536,8 @@
     <div class="container">
         <div class="header">
             <div class="header-left">
-                <h1>📍 グローバル地震マッピングシステム v2.0</h1>
-                <p>気象庁データベース & 国際地震データベース | 1995-2026年 被害統計付き</p>
+                <h1>📍 グローバル地震マッピングシステム v2.1</h1>
+                <p>気象庁データベース & 国際地震データベース | 1995-2026年 被害統計付き（ドル/円併記）</p>
             </div>
             <div class="header-controls">
                 <button id="reloadBtn" title="再読み込み">🔄 更新</button>
@@ -578,6 +583,7 @@
                     <div class="stats-item">表示中: <strong id="markerCount">0</strong> 件</div>
                     <div class="stats-item">日本: <strong>7</strong> 件</div>
                     <div class="stats-item">海外: <strong>10</strong> 件</div>
+                    <div class="currency-note">💱 損失額: USD / JPY (1ドル=150円)</div>
                 </div>
 
                 <h2 style="margin-top: 30px;">📊 統計</h2>
@@ -597,7 +603,7 @@
         <div class="footer">
             <strong>📊 データ出典:</strong> 気象庁 震度データベース & 国際地震データベース<br>
             <strong>📅 最終更新:</strong> 2026年9月29日 | <strong>🌍 カバレッジ:</strong> 日本国内 + 主要国際地震<br>
-            ⚠️ <strong>注意:</strong> 2026年は統計的異常な地震活動年です
+            <strong>💱 通貨表記:</strong> USD / JPY（1ドル=150円で換算）
         </div>
     </div>
 
@@ -658,50 +664,19 @@
             <h2>🔒 プライバシーポリシー</h2>
             <div class="policy-content">
                 <h4>1. はじめに</h4>
-                <p>グローバル地震マッピングシステム（以下「本システム」）は、世界の地震情報を可視化するツールです。本プライバシーポリシーは、本システムの利用に関するデータの取り扱いについて説明します。</p>
+                <p>グローバル地震マッピングシステムは、世界の地震情報を可視化するツールです。</p>
 
                 <h4>2. 収集情報</h4>
-                <p><strong>本システムは以下の情報を自動的に収集します：</strong></p>
-                <ul style="margin-left: 15px;">
-                    <li>アクセス日時・IPアドレス</li>
-                    <li>ブラウザ情報</li>
-                    <li>使用されたフィルター条件</li>
-                    <li>マップ操作履歴（スクロール、ズーム）</li>
-                </ul>
                 <p><strong>本システムは個人を特定する情報を収集しません。</strong></p>
 
                 <h4>3. 情報の利用</h4>
-                <p>収集したデータは以下の目的に限定して利用されます：</p>
-                <ul style="margin-left: 15px;">
-                    <li>システムの改善と最適化</li>
-                    <li>利用パターンの分析</li>
-                    <li>技術的なトラブルシューティング</li>
-                    <li>セキュリティの強化</li>
-                </ul>
+                <p>収集したデータはシステム改善と統計分析に限定して利用されます。</p>
 
                 <h4>4. クッキーについて</h4>
-                <p>本システムは以下の情報をブラウザストレージに保存します：</p>
-                <ul style="margin-left: 15px;">
-                    <li>表示モード（Light/Dark）の設定</li>
-                    <li>フィルター条件</li>
-                    <li>最後に表示した地域</li>
-                </ul>
-                <p>これらの情報は端末内のみに保存され、サーバーに送信されません。</p>
+                <p>表示モード設定、フィルター条件などを端末内のみに保存します。</p>
 
-                <h4>5. 第三者との共有</h4>
-                <p>本システムは、収集したデータを第三者と共有することはありません。ただし、法的要求がある場合を除きます。</p>
-
-                <h4>6. 情報セキュリティ</h4>
-                <p>本システムは、ユーザーの情報を保護するために最新のセキュリティ対策を実施しています。</p>
-
-                <h4>7. 外部リンク</h4>
-                <p>本システムが提供する外部リンク先のプライバシーポリシーについては、各サイトのポリシーに従います。</p>
-
-                <h4>8. ポリシーの変更</h4>
-                <p>本ポリシーは予告なく変更される場合があります。</p>
-
-                <h4>9. お問い合わせ</h4>
-                <p>本プライバシーポリシーに関するご質問・ご不明な点は、DWA防災情報センターまでお問い合わせください。</p>
+                <h4>5. セキュリティ</h4>
+                <p>最新のセキュリティ対策を実施しています。</p>
 
                 <p style="margin-top: 20px; font-size: 12px; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 15px;">
                     最終更新: 2026年9月29日
@@ -711,28 +686,28 @@
     </div>
 
     <script>
-        // グローバルデータ
+        // グローバルデータ（ドル/円併記）
         const earthquakeData = {
             domestic: [
-                {date:"2026-07-28",location:"熊本県熊本地方",country:"日本",lat:32.7436,lng:130.7467,mag:7.1,intensity:"7",depth:16,casualties:{deaths:50,injuries:1250,missing:5},buildings:{collapsed:3200,halfdamaged:8500,slightly_damaged:45000},economic_loss:1200000000},
-                {date:"2026-06-25",location:"岩手県沖",country:"日本",lat:39.6967,lng:142.1192,mag:7.2,intensity:"6強",depth:44,casualties:{deaths:12,injuries:450,missing:2},buildings:{collapsed:520,halfdamaged:1800,slightly_damaged:12000},economic_loss:250000000},
-                {date:"2025-12-08",location:"青森県東方沖",country:"日本",lat:40.5,lng:142.5,mag:7.5,intensity:"6強",depth:54,casualties:{deaths:8,injuries:320,missing:1},buildings:{collapsed:350,halfdamaged:1200,slightly_damaged:8500},economic_loss:180000000},
-                {date:"2024-01-01",location:"石川県能登地方",country:"日本",lat:37.2667,lng:136.7667,mag:7.6,intensity:"7",depth:16,casualties:{deaths:241,injuries:1100,missing:0},buildings:{collapsed:1124,halfdamaged:3456,slightly_damaged:28000},economic_loss:800000000},
-                {date:"2016-04-16",location:"熊本県熊本地方",country:"日本",lat:32.7436,lng:130.7467,mag:7.3,intensity:"7",depth:12,casualties:{deaths:50,injuries:1600,missing:0},buildings:{collapsed:8667,halfdamaged:27795,slightly_damaged:102778},economic_loss:1610000000},
-                {date:"2011-03-11",location:"三陸沖",country:"日本",lat:38.0629,lng:142.3915,mag:9.0,intensity:"7",depth:24,casualties:{deaths:19846,injuries:2562,missing:2562},buildings:{collapsed:127290,halfdamaged:272788,slightly_damaged:747989},economic_loss:23500000000},
-                {date:"1995-01-17",location:"大阪湾（神戸）",country:"日本",lat:34.5916,lng:135.0372,mag:7.3,intensity:"7",depth:16,casualties:{deaths:6434,injuries:43792,missing:3},buildings:{collapsed:104906,halfdamaged:144274,slightly_damaged:340992},economic_loss:9900000000}
+                {date:"2026-07-28",location:"熊本県熊本地方",country:"日本",lat:32.7436,lng:130.7467,mag:7.1,intensity:"7",depth:16,casualties:{deaths:50,injuries:1250,missing:5},buildings:{collapsed:3200,halfdamaged:8500,slightly_damaged:45000},economic_loss:{usd:1200000000,jpy:180000000000}},
+                {date:"2026-06-25",location:"岩手県沖",country:"日本",lat:39.6967,lng:142.1192,mag:7.2,intensity:"6強",depth:44,casualties:{deaths:12,injuries:450,missing:2},buildings:{collapsed:520,halfdamaged:1800,slightly_damaged:12000},economic_loss:{usd:250000000,jpy:37500000000}},
+                {date:"2025-12-08",location:"青森県東方沖",country:"日本",lat:40.5,lng:142.5,mag:7.5,intensity:"6強",depth:54,casualties:{deaths:8,injuries:320,missing:1},buildings:{collapsed:350,halfdamaged:1200,slightly_damaged:8500},economic_loss:{usd:180000000,jpy:27000000000}},
+                {date:"2024-01-01",location:"石川県能登地方",country:"日本",lat:37.2667,lng:136.7667,mag:7.6,intensity:"7",depth:16,casualties:{deaths:241,injuries:1100,missing:0},buildings:{collapsed:1124,halfdamaged:3456,slightly_damaged:28000},economic_loss:{usd:800000000,jpy:120000000000}},
+                {date:"2016-04-16",location:"熊本県熊本地方",country:"日本",lat:32.7436,lng:130.7467,mag:7.3,intensity:"7",depth:12,casualties:{deaths:50,injuries:1600,missing:0},buildings:{collapsed:8667,halfdamaged:27795,slightly_damaged:102778},economic_loss:{usd:1610000000,jpy:241500000000}},
+                {date:"2011-03-11",location:"三陸沖",country:"日本",lat:38.0629,lng:142.3915,mag:9.0,intensity:"7",depth:24,casualties:{deaths:19846,injuries:2562,missing:2562},buildings:{collapsed:127290,halfdamaged:272788,slightly_damaged:747989},economic_loss:{usd:235000000000,jpy:35250000000000}},
+                {date:"1995-01-17",location:"大阪湾（神戸）",country:"日本",lat:34.5916,lng:135.0372,mag:7.3,intensity:"7",depth:16,casualties:{deaths:6434,injuries:43792,missing:3},buildings:{collapsed:104906,halfdamaged:144274,slightly_damaged:340992},economic_loss:{usd:9900000000,jpy:1485000000000}}
             ],
             international: [
-                {date:"2023-02-06",location:"ガザンテップ",country:"トルコ・シリア",lat:37.390,lng:37.763,mag:7.8,depth:18,casualties:{deaths:50000,injuries:100000,missing:5000},buildings:{collapsed:126373,halfdamaged:308658,slightly_damaged:500000},economic_loss:84200000000},
-                {date:"2008-05-12",location:"四川省",country:"中国",lat:31.005,lng:103.322,mag:7.9,depth:19,casualties:{deaths:87587,injuries:374643,missing:17963},buildings:{collapsed:5335,halfdamaged:21971,slightly_damaged:372000},economic_loss:85000000000},
-                {date:"2004-12-26",location:"スマトラ沖",country:"インドネシア",lat:3.316,lng:95.854,mag:9.1,depth:30,casualties:{deaths:227898,injuries:125000,missing:0},buildings:{collapsed:500000,halfdamaged:1000000,slightly_damaged:3000000},economic_loss:10000000000,note:"インド洋大津波"},
-                {date:"2010-01-12",location:"ポルトープランス",country:"ハイチ",lat:18.351,lng:-72.295,mag:7.0,depth:13,casualties:{deaths:222570,injuries:300000,missing:45000},buildings:{collapsed:188000,halfdamaged:500000,slightly_damaged:1000000},economic_loss:7000000000},
-                {date:"2023-09-08",location:"モロッコ北部",country:"モロッコ",lat:31.950,lng:-3.597,mag:6.8,depth:18,casualties:{deaths:2862,injuries:2562,missing:0},buildings:{collapsed:2946,halfdamaged:8661,slightly_damaged:45000},economic_loss:850000000},
-                {date:"2013-04-25",location:"ダッカ",country:"バングラデシュ",lat:23.676,lng:90.356,mag:6.0,depth:46,casualties:{deaths:1138,injuries:2500,missing:0},buildings:{collapsed:3500,halfdamaged:8000,slightly_damaged:50000},economic_loss:2500000000},
-                {date:"2005-03-28",location:"スマトラ島北西沖",country:"インドネシア",lat:2.078,lng:97.012,mag:8.6,depth:30,casualties:{deaths:1313,injuries:1158,missing:0},buildings:{collapsed:15000,halfdamaged:50000,slightly_damaged:200000},economic_loss:450000000},
-                {date:"2011-09-03",location:"クライストチャーチ",country:"ニュージーランド",lat:-43.530,lng:172.636,mag:6.3,depth:5,casualties:{deaths:185,injuries:2000,missing:0},buildings:{collapsed:15000,halfdamaged:50000,slightly_damaged:200000},economic_loss:40000000000},
-                {date:"2018-09-28",location:"パル",country:"インドネシア",lat:-8.271,lng:120.362,mag:7.5,depth:24,casualties:{deaths:4340,injuries:75000,missing:0},buildings:{collapsed:65000,halfdamaged:150000,slightly_damaged:500000},economic_loss:800000000},
-                {date:"2015-04-25",location:"カトマンズ",country:"ネパール",lat:28.1470,lng:84.987,mag:7.8,depth:15,casualties:{deaths:8846,injuries:21000,missing:0},buildings:{collapsed:200000,halfdamaged:300000,slightly_damaged:1000000},economic_loss:7000000000}
+                {date:"2023-02-06",location:"ガザンテップ",country:"トルコ・シリア",lat:37.390,lng:37.763,mag:7.8,depth:18,casualties:{deaths:50000,injuries:100000,missing:5000},buildings:{collapsed:126373,halfdamaged:308658,slightly_damaged:500000},economic_loss:{usd:84200000000,jpy:12630000000000}},
+                {date:"2008-05-12",location:"四川省",country:"中国",lat:31.005,lng:103.322,mag:7.9,depth:19,casualties:{deaths:87587,injuries:374643,missing:17963},buildings:{collapsed:5335,halfdamaged:21971,slightly_damaged:372000},economic_loss:{usd:85000000000,jpy:12750000000000}},
+                {date:"2004-12-26",location:"スマトラ沖",country:"インドネシア",lat:3.316,lng:95.854,mag:9.1,depth:30,casualties:{deaths:227898,injuries:125000,missing:0},buildings:{collapsed:500000,halfdamaged:1000000,slightly_damaged:3000000},economic_loss:{usd:10000000000,jpy:1500000000000},note:"インド洋大津波"},
+                {date:"2010-01-12",location:"ポルトープランス",country:"ハイチ",lat:18.351,lng:-72.295,mag:7.0,depth:13,casualties:{deaths:222570,injuries:300000,missing:45000},buildings:{collapsed:188000,halfdamaged:500000,slightly_damaged:1000000},economic_loss:{usd:7000000000,jpy:1050000000000}},
+                {date:"2023-09-08",location:"モロッコ北部",country:"モロッコ",lat:31.950,lng:-3.597,mag:6.8,depth:18,casualties:{deaths:2862,injuries:2562,missing:0},buildings:{collapsed:2946,halfdamaged:8661,slightly_damaged:45000},economic_loss:{usd:850000000,jpy:127500000000}},
+                {date:"2013-04-25",location:"ダッカ",country:"バングラデシュ",lat:23.676,lng:90.356,mag:6.0,depth:46,casualties:{deaths:1138,injuries:2500,missing:0},buildings:{collapsed:3500,halfdamaged:8000,slightly_damaged:50000},economic_loss:{usd:2500000000,jpy:375000000000}},
+                {date:"2005-03-28",location:"スマトラ島北西沖",country:"インドネシア",lat:2.078,lng:97.012,mag:8.6,depth:30,casualties:{deaths:1313,injuries:1158,missing:0},buildings:{collapsed:15000,halfdamaged:50000,slightly_damaged:200000},economic_loss:{usd:450000000,jpy:67500000000}},
+                {date:"2011-09-03",location:"クライストチャーチ",country:"ニュージーランド",lat:-43.530,lng:172.636,mag:6.3,depth:5,casualties:{deaths:185,injuries:2000,missing:0},buildings:{collapsed:15000,halfdamaged:50000,slightly_damaged:200000},economic_loss:{usd:40000000000,jpy:6000000000000}},
+                {date:"2018-09-28",location:"パル",country:"インドネシア",lat:-8.271,lng:120.362,mag:7.5,depth:24,casualties:{deaths:4340,injuries:75000,missing:0},buildings:{collapsed:65000,halfdamaged:150000,slightly_damaged:500000},economic_loss:{usd:800000000,jpy:120000000000}},
+                {date:"2015-04-25",location:"カトマンズ",country:"ネパール",lat:28.1470,lng:84.987,mag:7.8,depth:15,casualties:{deaths:8846,injuries:21000,missing:0},buildings:{collapsed:200000,halfdamaged:300000,slightly_damaged:1000000},economic_loss:{usd:7000000000,jpy:1050000000000}}
             ]
         };
 
@@ -792,12 +767,12 @@
 
         // 共有機能
         function shareOnLine() {
-            const text = 'グローバル地震マッピングシステム - 1995年以来の地震データを可視化 🌍📍';
+            const text = 'グローバル地震マッピングシステム - 世界の地震データを可視化（ドル/円併記） 🌍📍';
             window.open(`https://line.me/R/msg/text/?${encodeURIComponent(text + '\n' + pageUrl)}`);
         }
 
         function shareOnTwitter() {
-            const text = 'グローバル地震マッピングシステムをチェック - 世界の地震情報を一覧で確認できます #地震 #防災';
+            const text = 'グローバル地震マッピングシステムをチェック - 被害統計付き #地震 #防災';
             window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`);
         }
 
@@ -868,6 +843,10 @@
 
         function formatNumber(num) {
             return new Intl.NumberFormat('ja-JP').format(num);
+        }
+
+        function formatCurrency(usd, jpy) {
+            return `$${(usd / 1000000000).toFixed(1)}B / ¥${(jpy / 1000000000).toFixed(0)}B`;
         }
 
         function updateMarkers() {
@@ -954,14 +933,16 @@
                     }
 
                     if (eq.economic_loss) {
-                        const billionLoss = (eq.economic_loss / 1000000000).toFixed(1);
                         popupContent += `
                             <div class="popup-damage">
                                 <h4>💰 経済損失</h4>
                                 <div class="popup-damage-item">
                                     <span>推定損失額:</span>
-                                    <strong>$${billionLoss}B</strong>
                                 </div>
+                                <div class="popup-damage-item" style="justify-content: flex-start; padding: 5px 0;">
+                                    <strong>${formatCurrency(eq.economic_loss.usd, eq.economic_loss.jpy)}</strong>
+                                </div>
+                                <div class="currency-note">（1ドル = 150円で換算）</div>
                             </div>
                         `;
                     }

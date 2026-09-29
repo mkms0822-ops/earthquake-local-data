@@ -55,49 +55,53 @@
         .header p { font-size: 14px; opacity: 0.9; }
 
         .controls {
-            padding: 15px;
+            padding: 10px 15px;
             background: var(--bg-secondary);
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
             border-bottom: 1px solid var(--border-color);
+            align-items: end;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 3px;
         }
 
         .control-group label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             color: var(--text-primary);
         }
 
         .control-group select {
-            padding: 10px;
+            padding: 6px 8px;
             border: 1px solid var(--border-color);
-            border-radius: 5px;
+            border-radius: 4px;
             background: var(--bg-primary);
             color: var(--text-primary);
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .main-wrapper {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 20px;
-            padding: 20px;
+            gap: 0;
+            padding: 0;
+            flex: 1;
+            overflow: auto;
         }
 
         .map-container {
-            height: 900px;
+            height: calc(100vh - 150px);
             position: relative;
-            border-radius: 10px;
+            border-radius: 0;
             overflow: hidden;
             background: var(--bg-secondary);
             grid-column: 1;
+            min-height: 500px;
         }
 
         #map { 
@@ -110,22 +114,25 @@
             grid-column: 1;
             display: grid;
             grid-template-columns: 2fr 1fr;
-            gap: 20px;
+            gap: 0;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
         }
 
         .info { 
-            background: var(--bg-secondary); 
-            padding: 20px; 
-            border-radius: 10px; 
+            background: transparent; 
+            padding: 0 20px 0 0; 
+            border-radius: 0; 
             grid-column: 1;
         }
         .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stats-item { background: var(--bg-primary); padding: 12px; border-radius: 5px; text-align: center; }
 
         .sidebar {
-            background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 10px;
+            background: transparent;
+            padding: 0;
+            border-radius: 0;
             height: fit-content;
             grid-column: 2;
         }

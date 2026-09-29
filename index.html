@@ -212,6 +212,51 @@ background:var(--bg-secondary);border-bottom:1px solid var(--border-color);
 }
 
 
+/* ---------- 歴史地震マーカー ---------- */
+.hist-icon{background:none;border:none}
+.hist-mk{
+width:100%;height:100%;transform:rotate(45deg);
+border:2.5px solid #fff;border-radius:5px;
+display:flex;align-items:center;justify-content:center;
+box-shadow:0 2px 6px rgba(0,0,0,.45);
+}
+.hist-mk span{
+transform:rotate(-45deg);font-size:10px;font-weight:700;color:#fff;
+text-shadow:0 1px 2px rgba(0,0,0,.5);letter-spacing:-.4px;
+}
+.zone-lbl{background:none;border:none}
+.zone-lbl div{
+font-size:12px;font-weight:700;color:#fff;white-space:nowrap;
+text-shadow:0 1px 3px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6);
+}
+
+/* ---------- 年表 ---------- */
+.tl{position:relative;padding-left:22px;margin:12px 0}
+.tl::before{
+content:'';position:absolute;left:6px;top:4px;bottom:4px;
+width:2px;background:var(--border-color);
+}
+.tl-row{position:relative;margin-bottom:11px}
+.tl-row::before{
+content:'';position:absolute;left:-20px;top:5px;
+width:11px;height:11px;border-radius:50%;
+border:2px solid var(--bg-card);
+}
+.tl-row.nankai::before{background:#e91e63}
+.tl-row.chishima::before{background:#3f51b5}
+.tl-row.japan::before{background:#00897b}
+.tl-y{font-size:11.5px;color:var(--text-muted);font-weight:600}
+.tl-n{font-size:13.5px;font-weight:600;margin:1px 0 2px}
+.tl-d{font-size:12px;color:var(--text-primary);line-height:1.7}
+.tl-m{
+display:inline-block;padding:1px 7px;border-radius:4px;
+font-size:11px;font-weight:700;color:#fff;margin-left:6px;
+}
+.gap-note{
+font-size:11.5px;color:var(--text-muted);font-style:normal;
+padding:3px 0 8px;margin-left:2px;
+}
+
 /* ---------- 解説パネル ---------- */
 .learn-overlay{
 position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:3000;
@@ -392,6 +437,14 @@ padding:11px 14px;margin-bottom:8px;background:var(--bg-card);
       <input type="checkbox" id="plateToggle" onchange="toggleLayer('plate')">
       <span class="dot" style="background:#00bcd4"></span><span>プレート境界（世界）</span>
     </label>
+    <label class="chk" id="lb-hist">
+      <input type="checkbox" id="histToggle" onchange="toggleLayer('hist')">
+      <span class="dot" style="background:#e91e63"></span><span>海溝型の歴史地震 33件</span>
+    </label>
+    <label class="chk" id="lb-zone">
+      <input type="checkbox" id="zoneToggle" onchange="toggleLayer('zone')">
+      <span class="dot" style="background:#ff9800"></span><span>想定震源域</span>
+    </label>
     <span class="spacer"></span>
     <button class="btn btn-ghost" onclick="toggleCharts()" id="chartBtn">📊 統計グラフを表示</button>
   </div>
@@ -406,6 +459,10 @@ padding:11px 14px;margin-bottom:8px;background:var(--bg-card);
       <div><span class="ln" style="background:#7b1fa2"></span>左横ずれ</div>
       <div><span class="ln" style="background:#00897b"></span>沈み込み帯</div>
       <div><span class="ln" style="background:#00bcd4;height:4px"></span>プレート境界</div>
+      <div style="font-weight:700;margin:6px 0 4px">歴史地震・想定震源域</div>
+      <div><span class="dot" style="background:#e91e63"></span>南海トラフ</div>
+      <div><span class="dot" style="background:#3f51b5"></span>千島海溝</div>
+      <div><span class="dot" style="background:#00897b"></span>日本海溝</div>
     </div>
     <div class="legend">
       <div><span class="dot" style="background:#7b1fa2"></span>震度7</div>
@@ -468,6 +525,7 @@ padding:11px 14px;margin-bottom:8px;background:var(--bg-card);
   <a onclick="openLearn('mech')">🌏 地震のメカニズム</a>
   <a onclick="openLearn('fault')">🔻 断層の種類（図解）</a>
   <a onclick="openLearn('wave')">〰️ 地震波・長周期地震動</a>
+  <a onclick="openLearn('trough')">🌊 南海トラフ・千島海溝の履歴</a>
   <a onclick="openLearn('gloss')">📖 地震用語集（59語）</a>
   <div class="grp">その他</div>
   <a onclick="showPrivacy()">🔒 プライバシーポリシー</a>
@@ -486,6 +544,7 @@ padding:11px 14px;margin-bottom:8px;background:var(--bg-card);
       <button class="learn-tab on" onclick="showLearnTab('mech',this)">🌏 メカニズム</button>
       <button class="learn-tab" onclick="showLearnTab('fault',this)">🔻 断層の種類</button>
       <button class="learn-tab" onclick="showLearnTab('wave',this)">〰️ 地震波・長周期</button>
+      <button class="learn-tab" onclick="showLearnTab('trough',this)">🌊 海溝型の履歴</button>
       <button class="learn-tab" onclick="showLearnTab('gloss',this)">📖 用語集</button>
     </div>
     <div class="learn-body">
@@ -872,6 +931,7 @@ padding:11px 14px;margin-bottom:8px;background:var(--bg-card);
   </defs>
 </svg>
 <div class="ill-cap">P波検知から数秒で解析し、S波到達前に配信</div><p><b>流れ</b></p><ul><li>震源に近い観測点がP波を検知</li><li>数秒で震源・規模・各地の震度を自動計算</li><li>強い揺れが予想される地域へ即座に配信</li><li>S波（大きな揺れ）到達まで数秒〜数十秒の猶予が生まれる</li></ul><div class="warn">⚠️ <b>限界があります。</b><br>・震源が近い直下型地震では、速報が<b>間に合わない</b>ことがある<br>・同時に複数の地震が起きると、規模を過大・過小に見積もることがある<br>・第一報は精度が低く、続報で修正される</div><p><b>鳴ったら数秒でできること</b></p><ul><li>頭を守り、丈夫な机の下に入る</li><li>火を使っていれば無理のない範囲で消す（慌てて動かない）</li><li>ドアを開けて逃げ道を確保</li><li>運転中は急ブレーキを避け、ハザードを出して緩やかに減速</li></ul></div></div></div>
+      <div class="learn-sec" id="sec-trough"><div class="learn-intro">プレート境界で繰り返してきた巨大地震の記録です。マップの「海溝型の歴史地震」「想定震源域」をONにすると、位置関係を確認できます。<br>※ 1900年以前の規模・被害は文献や津波堆積物からの推定値で、研究者により幅があります。</div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>🔴 南海トラフ — 約90〜150年ごとに繰り返す（12件）</span><span class="arw">▶</span></button><div class="acc-body"><p>駿河湾から日向灘にかけて、フィリピン海プレートがユーラシアプレートの下へ沈み込む境界で起きる地震です。<b>684年の白鳳地震から1300年以上の記録</b>が残る、世界でも稀な観測史を持つ震源域です。</p><table><tr><th>想定規模</th><td>M8〜M9クラス</td></tr><tr><th>30年確率</th><td>60〜90%程度以上（すべり量依存BPTモデル）／ 20〜50%（BPTモデル）</td></tr><tr><th>前回から</th><td>昭和南海地震（1946年）から約80年</td></tr></table><div class="warn">⚠️ 2025年9月26日、地震調査委員会が12年ぶりに算出方法を見直し、従来の「80%程度」に代えて2つの確率を併記した。どちらも最も高いⅢランクで、切迫性が高い評価に変わりはない。内閣府の2025年3月公表の被害想定では、最悪のケースで死者29万8000人、全壊焼失235万棟とされる。</div><p><b>発生パターンの特徴</b></p><ul><li><b>東側（東海・東南海）と西側（南海）が別々に、または同時に動く</b></li><li>別々に動く場合でも、2年以内に連動した例が多い（1854年は32時間差、1944年と1946年は2年差）</li><li>1707年の宝永地震では東海・南海が<b>同時に</b>動き、最大級となった</li><li>間隔は約90〜150年とばらつきが大きい</li></ul><div class="tl"><div class="tl-row nankai"><div class="tl-y">684/11/29（天武13年）</div><div class="tl-n">白鳳（天武）地震<span class="tl-m" style="background:#e91e63">M8.25</span></div><div class="tl-d">日本最古の南海トラフ地震の記録。『日本書紀』に土佐で船が多数沈み、田畑約12km²が海に沈んだとある。</div></div><div class="tl-row nankai"><div class="tl-y">887/08/26（仁和3年）</div><div class="tl-n">仁和地震<span class="tl-m" style="background:#e91e63">M8.25</span></div><div class="tl-d">京都で家屋倒壊、摂津で津波被害。東海・南海が連動した可能性が指摘されている。</div></div><div class="tl-row nankai"><div class="tl-y">1096/12/17（永長元年）</div><div class="tl-n">永長地震（東海）<span class="tl-m" style="background:#e91e63">M8.25</span></div><div class="tl-d">東大寺の鐘が落下。伊勢・駿河で津波。3年後の康和地震と対になる東海側の地震とされる。</div></div><div class="gap-note">↓ 前回から約3年</div><div class="tl-row nankai"><div class="tl-y">1099/02/22（康和元年）</div><div class="tl-n">康和地震（南海）<span class="tl-m" style="background:#e91e63">M8.15</span></div><div class="tl-d">興福寺・天王寺で被害。史料が少なく、南海トラフ地震かどうか議論がある。</div></div><div class="gap-note">↓ 前回から約262年</div><div class="tl-row nankai"><div class="tl-y">1361/08/03（正平16年）</div><div class="tl-n">正平（康安）地震<span class="tl-m" style="background:#e91e63">M8.4</span></div><div class="tl-d">摂津・四天王寺が倒壊、阿波で津波。津波被害の詳細が記録された日本最古級の事例。</div></div><div class="gap-note">↓ 前回から約137年</div><div class="tl-row nankai"><div class="tl-y">1498/09/20（明応7年）</div><div class="tl-n">明応地震（東海）<span class="tl-m" style="background:#e91e63">M8.3</span></div><div class="tl-d">死者3〜4万人。津波で浜名湖が海とつながり「今切」ができた。鎌倉の大仏殿が流失したとの伝承も残る。　<b>死者 約40,000人 / 津波 最大10.0m</b></div></div><div class="gap-note">↓ 前回から約107年</div><div class="tl-row nankai"><div class="tl-y">1605/02/03（慶長9年）</div><div class="tl-n">慶長地震<span class="tl-m" style="background:#e91e63">M7.95</span></div><div class="tl-d">揺れは小さかったのに津波が巨大だった典型的な「津波地震」。房総から九州まで被害。　<b>死者 約15,000人 / 津波 最大10.0m</b></div></div><div class="gap-note">↓ 前回から約102年</div><div class="tl-row nankai"><div class="tl-y">1707/10/28（宝永4年）</div><div class="tl-n">宝永地震<span class="tl-m" style="background:#e91e63">M8.9</span></div><div class="tl-d">東海・南海が同時に動いた南海トラフ最大級の地震。倒壊6万戸。49日後に富士山が宝永噴火を起こした。　<b>死者 約20,000人 / 津波 最大10.0m</b></div></div><div class="gap-note">↓ 前回から約147年</div><div class="tl-row nankai"><div class="tl-y">1854/12/23（嘉永7年）</div><div class="tl-n">安政東海地震<span class="tl-m" style="background:#e91e63">M8.4</span></div><div class="tl-d">死者2000〜3000人。下田港でロシア艦ディアナ号が津波で大破した。　<b>死者 約2,600人 / 津波 最大6.0m</b></div></div><div class="gap-note">↓ 前回から約0年</div><div class="tl-row nankai"><div class="tl-y">1854/12/24（嘉永7年）</div><div class="tl-n">安政南海地震<span class="tl-m" style="background:#e91e63">M8.4</span></div><div class="tl-d">東海地震のわずか32時間後に発生。「稲むらの火」で知られる濱口梧陵の逸話はこの津波のもの。　<b>死者 約3,000人 / 津波 最大7.0m</b></div></div><div class="gap-note">↓ 前回から約90年</div><div class="tl-row nankai"><div class="tl-y">1944/12/07（昭和19年）</div><div class="tl-n">昭和東南海地震<span class="tl-m" style="background:#e91e63">M7.9</span></div><div class="tl-d">死者・行方不明1223人。戦時中のため報道が規制され「隠された地震」と呼ばれる。　<b>死者 約1,223人 / 津波 最大9.0m</b></div></div><div class="gap-note">↓ 前回から約2年</div><div class="tl-row nankai"><div class="tl-y">1946/12/21（昭和21年）</div><div class="tl-n">昭和南海地震<span class="tl-m" style="background:#e91e63">M8.0</span></div><div class="tl-d">死者1330人。前回の南海トラフ地震から既に約80年が経過している。　<b>死者 約1,330人 / 津波 最大6.6m</b></div></div></div></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>🔵 千島海溝 — 約340〜380年ごとの超巨大地震（13件）</span><span class="arw">▶</span></button><div class="acc-body"><p>北海道の東方から千島列島に沿って、太平洋プレートが沈み込む境界です。文献記録は江戸時代以降しかありませんが、<b>北海道東部の湿原に残る津波堆積物</b>から、それ以前の超巨大地震の存在が明らかになりました。</p><table><tr><th>想定規模</th><td>M8.8以上（17世紀型）、根室沖 M7.8〜8.5程度</td></tr><tr><th>30年確率</th><td>超巨大地震（17世紀型）7〜40% / 根室沖 70%程度 / 色丹島・択捉島沖 60%程度</td></tr><tr><th>前回の超巨大地震</th><td>17世紀（約400年前）</td></tr></table><div class="warn">⚠️ 北海道東部の湿原から見つかった津波堆積物により、約340〜380年間隔で海溝軸まで破壊が達する超巨大地震が繰り返してきたことが判明した。2026年2月の海底地殻変動観測では、根室沖の浅部プレート境界がほぼ100%固着していることが確認され、再来の切迫が指摘されている。</div><p><b>なぜ注目されているのか</b></p><ul><li>霧多布湿原・藻散布湿原の調査で、<b>平均約340〜380年間隔</b>で巨大津波が襲来していたことが判明</li><li>最新は17世紀で、<b>すでに約400年が経過</b>している</li><li>2026年2月に公表された海底観測では、根室沖の浅部プレート境界が<b>ほぼ100%固着</b>していることを確認</li><li>前回のすべり量約25mに匹敵するひずみが、すでに蓄積している可能性</li><li>想定される津波は根室市〜えりも町付近で<b>10〜20m超</b>、場所により30m近くに達する</li></ul><div class="tip">💡 2022年12月から「北海道・三陸沖後発地震注意情報」の運用が始まりました。この想定域でM7以上の地震が起きた場合、さらに大きな後発地震への注意を呼びかける仕組みです。</div><div class="tl"><div class="tl-row chishima"><div class="tl-y">1600年代前半（17世紀）</div><div class="tl-n">17世紀型 超巨大地震<span class="tl-m" style="background:#3f51b5">M8.8</span></div><div class="tl-d">文献記録はなく、津波堆積物から復元された地震。すべり量は約25mと推定。平均間隔は約340〜380年で、前回から既に約400年が経過している。　<b>津波 最大20.0m</b></div></div><div class="gap-note">↓ 前回から約243年</div><div class="tl-row chishima"><div class="tl-y">1843/04/25（天保14年）</div><div class="tl-n">天保十勝沖地震<span class="tl-m" style="background:#3f51b5">M8.0</span></div><div class="tl-d">十勝沖と根室沖が連動したプレート間地震と推定される。厚岸で津波被害。　<b>死者 約46人 / 津波 最大4.0m</b></div></div><div class="gap-note">↓ 前回から約51年</div><div class="tl-row chishima"><div class="tl-y">1894/03/22（明治27年）</div><div class="tl-n">根室半島沖地震<span class="tl-m" style="background:#3f51b5">M7.9</span></div><div class="tl-d">根室・釧路で被害。津波の波源域は1843年の地震と重なると考えられている。　<b>死者 約1人 / 津波 最大4.0m</b></div></div><div class="gap-note">↓ 前回から約24年</div><div class="tl-row chishima"><div class="tl-y">1918/11/08（大正7年）</div><div class="tl-n">ウルップ島沖地震<span class="tl-m" style="background:#3f51b5">M8.0</span></div><div class="tl-d">千島列島中部で発生。ウルップ島で12mの津波を観測した。　<b>死者 約24人 / 津波 最大12.0m</b></div></div><div class="gap-note">↓ 前回から約34年</div><div class="tl-row chishima"><div class="tl-y">1952/03/04（昭和27年）</div><div class="tl-n">十勝沖地震（1952）<span class="tl-m" style="background:#3f51b5">M8.2</span></div><div class="tl-d">死者・行方不明33人、負傷287人、全壊815棟。厚岸で6.5mの津波。被害は北海道に集中した。　<b>死者 約33人 / 津波 最大6.5m</b></div></div><div class="gap-note">↓ 前回から約6年</div><div class="tl-row chishima"><div class="tl-y">1958/11/07（昭和33年）</div><div class="tl-n">択捉島沖地震<span class="tl-m" style="background:#3f51b5">M8.1</span></div><div class="tl-d">千島列島で発生。北海道太平洋岸でも津波を観測した。　<b>津波 最大4.0m</b></div></div><div class="gap-note">↓ 前回から約5年</div><div class="tl-row chishima"><div class="tl-y">1963/10/13（昭和38年）</div><div class="tl-n">択捉島沖地震（1963）<span class="tl-m" style="background:#3f51b5">M8.1</span></div><div class="tl-d">5年前とほぼ同じ領域で再び発生。太平洋を横断する津波となった。　<b>津波 最大4.0m</b></div></div><div class="gap-note">↓ 前回から約6年</div><div class="tl-row chishima"><div class="tl-y">1969/08/12（昭和44年）</div><div class="tl-n">色丹島沖地震<span class="tl-m" style="background:#3f51b5">M7.8</span></div><div class="tl-d">北海道東方沖で発生。道東沿岸に津波が到達した。　<b>津波 最大4.0m</b></div></div><div class="gap-note">↓ 前回から約4年</div><div class="tl-row chishima"><div class="tl-y">1973/06/17（昭和48年）</div><div class="tl-n">根室半島沖地震<span class="tl-m" style="background:#3f51b5">M7.4</span></div><div class="tl-d">負傷26人。根室市で震度5。1894年の地震と同じ領域が動いたとされる。　<b>津波 最大2.8m</b></div></div><div class="gap-note">↓ 前回から約21年</div><div class="tl-row chishima"><div class="tl-y">1994/10/04（平成6年）</div><div class="tl-n">北海道東方沖地震<span class="tl-m" style="background:#3f51b5">M8.2</span></div><div class="tl-d">負傷436人。択捉島南西沖の沈み込んだプレート内部で起きたスラブ内地震。　<b>津波 最大3.0m</b></div></div><div class="gap-note">↓ 前回から約9年</div><div class="tl-row chishima"><div class="tl-y">2003/09/26（平成15年）</div><div class="tl-n">十勝沖地震（2003）<span class="tl-m" style="background:#3f51b5">M8.0</span></div><div class="tl-d">1952年とほぼ同じ震源域が再び動いた。苫小牧の石油タンクで長周期地震動によるスロッシング火災が発生。　<b>死者 約2人 / 津波 最大4.0m</b></div></div><div class="gap-note">↓ 前回から約3年</div><div class="tl-row chishima"><div class="tl-y">2006/11/15（平成18年）</div><div class="tl-n">千島列島沖地震<span class="tl-m" style="background:#3f51b5">M8.2</span></div><div class="tl-d">千島列島中部のプレート境界で発生。日本の太平洋沿岸にも津波が到達した。　<b>津波 最大2.0m</b></div></div><div class="gap-note">↓ 前回から約1年</div><div class="tl-row chishima"><div class="tl-y">2007/01/13（平成19年）</div><div class="tl-n">千島列島沖地震（2007）<span class="tl-m" style="background:#3f51b5">M8.1</span></div><div class="tl-d">前年の地震の海溝側で起きた正断層型（アウターライズ地震）。　<b>津波 最大2.0m</b></div></div></div></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>🟢 日本海溝 — 東日本大震災を含む震源域（8件）</span><span class="arw">▶</span></button><div class="acc-body"><p>千島海溝の南に続き、房総沖まで延びる震源域です。千島海溝と連続しているため、国は<b>「日本海溝・千島海溝周辺海溝型地震」</b>として一体で対策を進めています。</p><table><tr><th>想定規模</th><td>M7〜M9クラス</td></tr><tr><th>30年確率</th><td>ほぼ0〜70%（領域により異なる）</td></tr></table><p><b>3つのタイプが混在する</b></p><ul><li><b>プレート境界地震</b>：2011年 東北地方太平洋沖地震（M9.0）</li><li><b>津波地震</b>：揺れが小さいのに巨大津波。1896年 明治三陸地震（死者約2.2万人）</li><li><b>アウターライズ地震</b>：海溝の外側で起きる正断層型。1933年 昭和三陸地震（津波28.7m）</li></ul><div class="warn">⚠️ 津波地震は揺れが弱いため避難が遅れやすく、明治三陸地震では震度2〜3程度の揺れの後に最大38.2mの津波が襲いました。<b>揺れが小さくても、長くゆっくりした揺れを感じたら海から離れてください。</b></div><div class="tl"><div class="tl-row japan"><div class="tl-y">869/07/13（貞観11年）</div><div class="tl-n">貞観地震<span class="tl-m" style="background:#00897b">M8.4</span></div><div class="tl-d">津波が多賀城下まで達し溺死者約1000人。東日本大震災の先行例として再評価された。　<b>死者 約1,000人 / 津波 最大8.0m</b></div></div><div class="tl-row japan"><div class="tl-y">1611/12/02（慶長16年）</div><div class="tl-n">慶長三陸地震<span class="tl-m" style="background:#00897b">M8.1</span></div><div class="tl-d">揺れの割に巨大な津波が襲った津波地震。北海道沖の地震とする説もある。　<b>死者 約5,000人 / 津波 最大20.0m</b></div></div><div class="gap-note">↓ 前回から約66年</div><div class="tl-row japan"><div class="tl-y">1677/11/04（延宝5年）</div><div class="tl-n">延宝房総沖地震<span class="tl-m" style="background:#00897b">M8.0</span></div><div class="tl-d">房総半島から福島にかけて津波被害。これも津波地震とされる。　<b>死者 約500人 / 津波 最大8.0m</b></div></div><div class="gap-note">↓ 前回から約219年</div><div class="tl-row japan"><div class="tl-y">1896/06/15（明治29年）</div><div class="tl-n">明治三陸地震<span class="tl-m" style="background:#00897b">M8.35</span></div><div class="tl-d">死者約2.2万人。揺れは震度2〜3程度と弱かったのに最大38.2mの津波が襲った典型的な津波地震。　<b>死者 約21,959人 / 津波 最大38.2m</b></div></div><div class="gap-note">↓ 前回から約37年</div><div class="tl-row japan"><div class="tl-y">1933/03/03（昭和8年）</div><div class="tl-n">昭和三陸地震<span class="tl-m" style="background:#00897b">M8.1</span></div><div class="tl-d">死者・行方不明3064人。海溝の外側で起きた正断層型（アウターライズ地震）。津波は最大28.7m。　<b>死者 約3,064人 / 津波 最大28.7m</b></div></div><div class="gap-note">↓ 前回から約35年</div><div class="tl-row japan"><div class="tl-y">1968/05/16（昭和43年）</div><div class="tl-n">十勝沖地震（1968）<span class="tl-m" style="background:#00897b">M7.9</span></div><div class="tl-d">名称は十勝沖だが震源は青森県東方沖で、区分上は三陸沖北部の地震。鉄筋コンクリート建物の被害が注目された。　<b>死者 約52人 / 津波 最大5.0m</b></div></div><div class="gap-note">↓ 前回から約10年</div><div class="tl-row japan"><div class="tl-y">1978/06/12（昭和53年）</div><div class="tl-n">宮城県沖地震<span class="tl-m" style="background:#00897b">M7.4</span></div><div class="tl-d">死者28人の多くがブロック塀の倒壊による。1981年の新耐震基準制定のきっかけとなった。　<b>死者 約28人 / 津波 最大0.5m</b></div></div><div class="gap-note">↓ 前回から約33年</div><div class="tl-row japan"><div class="tl-y">2011/03/11（平成23年）</div><div class="tl-n">東北地方太平洋沖地震<span class="tl-m" style="background:#00897b">M9.0</span></div><div class="tl-d">日本の観測史上最大。震源域は南北約500km。津波の遡上高は最大40.1mに達した。　<b>死者 約19,759人 / 津波 最大40.1m</b></div></div></div></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>📊 3つの震源域を比べる</span><span class="arw">▶</span></button><div class="acc-body"><table><tr><th></th><th>南海トラフ</th><th>千島海溝</th><th>日本海溝</th></tr><tr><th>沈み込むプレート</th><td>フィリピン海</td><td>太平洋</td><td>太平洋</td></tr><tr><th>記録の長さ</th><td>約1300年（684年〜）</td><td>文献は約180年<br>堆積物では約6000年</td><td>約1150年（869年〜）</td></tr><tr><th>繰り返し間隔</th><td>約90〜150年</td><td>約340〜380年<br>（超巨大地震）</td><td>領域により様々</td></tr><tr><th>前回からの経過</th><td>約80年</td><td>約400年</td><td>約15年（M9）</td></tr><tr><th>最大級の例</th><td>1707年 宝永地震 M8.6〜9.3</td><td>17世紀型 Mw8.8以上</td><td>2011年 東北地方太平洋沖 M9.0</td></tr></table><p><b>読み取れること</b></p><ul><li>南海トラフは<b>間隔が短く記録が豊富</b>なため、次の地震の時期を推定しやすい</li><li>千島海溝は<b>間隔が長く文献記録が届かない</b>ため、津波堆積物という地層の証拠に頼る必要がある</li><li>どちらも<b>前回からの経過時間が平均間隔に近づいている</b></li><li>日本海溝は2011年に大きく動いたが、房総沖など<b>まだ動いていない領域</b>が残る</li></ul><div class="tip">💡 「何年周期だから、あと何年は大丈夫」という考え方はできません。間隔にはばらつきがあり、平均より早く起きることも遅れることもあります。確率が高い・低いにかかわらず、備えを続けることが大切です。</div></div></div></div>
       <div class="learn-sec" id="sec-gloss"><div class="learn-intro">地震のニュースや防災情報でよく出てくる用語を五十音順にまとめました。検索欄にキーワードを入れると絞り込めます。</div><input type="text" class="gl-search" id="glSearch" placeholder="🔍 用語を検索（例: 津波、P波、断層、震度）" oninput="filterGlossary()"><div class="gl-count" id="glCount"></div><div id="glList"><div class="gl-item" data-k="アスペリティasperity断層面のうち、普段は強く固着していて、地震時に一気に大きくずれる領域。ここが破壊されると強い地震波が出るため、被害を左右する重要な部分。"><h4>アスペリティ<span class="yomi">asperity</span></h4><p>断層面のうち、普段は強く固着していて、地震時に一気に大きくずれる領域。ここが破壊されると強い地震波が出るため、被害を左右する重要な部分。</p></div><div class="gl-item" data-k="異常震域いじょうしんいき震源から遠い場所の方が震度が大きくなる現象。沈み込んだ海洋プレート（スラブ）は地震波を伝えやすいため、深発地震では震源の真上より数百km離れた地域が強く揺れることがある。"><h4>異常震域<span class="yomi">いじょうしんいき</span></h4><p>震源から遠い場所の方が震度が大きくなる現象。沈み込んだ海洋プレート（スラブ）は地震波を伝えやすいため、深発地震では震源の真上より数百km離れた地域が強く揺れることがある。</p></div><div class="gl-item" data-k="上盤・下盤うわばん・したばん傾いた断層面の上側にのる岩盤が上盤、下側が下盤。上盤が下がれば正断層、上がれば逆断層。"><h4>上盤・下盤<span class="yomi">うわばん・したばん</span></h4><p>傾いた断層面の上側にのる岩盤が上盤、下側が下盤。上盤が下がれば正断層、上がれば逆断層。</p></div><div class="gl-item" data-k="液状化現象えきじょうかげんしょう水を含んだ砂地盤が強い揺れで液体のように振る舞う現象。建物が傾き、地中の管が浮き上がる。埋立地や旧河道で起きやすい。"><h4>液状化現象<span class="yomi">えきじょうかげんしょう</span></h4><p>水を含んだ砂地盤が強い揺れで液体のように振る舞う現象。建物が傾き、地中の管が浮き上がる。埋立地や旧河道で起きやすい。</p></div><div class="gl-item" data-k="s波エスは地震の横波。速さ約3〜4km/秒。進行方向と直角に揺れ、被害の大半をもたらす主要動。固体しか伝わらない。"><h4>S波<span class="yomi">エスは</span></h4><p>地震の横波。速さ約3〜4km/秒。進行方向と直角に揺れ、被害の大半をもたらす主要動。固体しか伝わらない。</p></div><div class="gl-item" data-k="mj（気象庁マグニチュード）えむじぇい気象庁が地震計の振幅から算出する日本独自のマグニチュード。速報性に優れるが、m8付近で頭打ちになる傾向がある。"><h4>Mj（気象庁マグニチュード）<span class="yomi">えむじぇい</span></h4><p>気象庁が地震計の振幅から算出する日本独自のマグニチュード。速報性に優れるが、M8付近で頭打ちになる傾向がある。</p></div><div class="gl-item" data-k="mw（モーメントマグニチュード）えむだぶりゅー地震モーメントから求めるマグニチュード。巨大地震でも頭打ちにならず、国際的な比較に使われる。"><h4>Mw（モーメントマグニチュード）<span class="yomi">えむだぶりゅー</span></h4><p>地震モーメントから求めるマグニチュード。巨大地震でも頭打ちにならず、国際的な比較に使われる。</p></div><div class="gl-item" data-k="大森公式おおもりこうしき初期微動継続時間から震源距離を推定する経験則。震源距離(km)≒8×初期微動継続時間(秒)。明治期の地震学者・大森房吉による。"><h4>大森公式<span class="yomi">おおもりこうしき</span></h4><p>初期微動継続時間から震源距離を推定する経験則。震源距離(km)≒8×初期微動継続時間(秒)。明治期の地震学者・大森房吉による。</p></div><div class="gl-item" data-k="海溝かいこう海洋プレートが沈み込む場所にできる細長い深い谷。日本海溝、千島海溝、伊豆・小笠原海溝など。水深6000mより浅いものはトラフと呼ぶ。"><h4>海溝<span class="yomi">かいこう</span></h4><p>海洋プレートが沈み込む場所にできる細長い深い谷。日本海溝、千島海溝、伊豆・小笠原海溝など。水深6000mより浅いものはトラフと呼ぶ。</p></div><div class="gl-item" data-k="海溝型地震かいこうがたじしんプレート境界で起きる地震。m8〜9の巨大地震になりやすく、津波を伴う。数十〜数百年の周期で繰り返す。東日本大震災、南海トラフ地震など。"><h4>海溝型地震<span class="yomi">かいこうがたじしん</span></h4><p>プレート境界で起きる地震。M8〜9の巨大地震になりやすく、津波を伴う。数十〜数百年の周期で繰り返す。東日本大震災、南海トラフ地震など。</p></div><div class="gl-item" data-k="活断層かつだんそう過去数十万年以内に繰り返し活動し、将来も動く可能性がある断層。日本に2000以上あるが、未知のものも多い。"><h4>活断層<span class="yomi">かつだんそう</span></h4><p>過去数十万年以内に繰り返し活動し、将来も動く可能性がある断層。日本に2000以上あるが、未知のものも多い。</p></div><div class="gl-item" data-k="干渉sarかんしょうさー人工衛星のレーダーで地表の変動を捉える技術。地震前後の観測を比較し、どの断層がどれだけ動いたかをcm単位で可視化できる。"><h4>干渉SAR<span class="yomi">かんしょうさー</span></h4><p>人工衛星のレーダーで地表の変動を捉える技術。地震前後の観測を比較し、どの断層がどれだけ動いたかをcm単位で可視化できる。</p></div><div class="gl-item" data-k="緊急地震速報きんきゅうじしんそくほう速いp波を検知し、遅いs波が到達する前に強い揺れを知らせる仕組み。震源が近いと間に合わないことがある。"><h4>緊急地震速報<span class="yomi">きんきゅうじしんそくほう</span></h4><p>速いP波を検知し、遅いS波が到達する前に強い揺れを知らせる仕組み。震源が近いと間に合わないことがある。</p></div><div class="gl-item" data-k="逆断層ぎゃくだんそう押し合う力で上盤がのし上がる断層。日本の内陸地震で最も多い。山地を作る力でもある。"><h4>逆断層<span class="yomi">ぎゃくだんそう</span></h4><p>押し合う力で上盤がのし上がる断層。日本の内陸地震で最も多い。山地を作る力でもある。</p></div><div class="gl-item" data-k="群発地震ぐんぱつじしん明確な本震がなく、同程度の規模の地震が長期間続く活動。火山地域や、2020年以降の能登半島北東部などで見られる。"><h4>群発地震<span class="yomi">ぐんぱつじしん</span></h4><p>明確な本震がなく、同程度の規模の地震が長期間続く活動。火山地域や、2020年以降の能登半島北東部などで見られる。</p></div><div class="gl-item" data-k="計測震度けいそくしんど震度計が算出する連続的な数値。これを区切って震度階級に変換する。例えば計測震度6.5以上が震度7。"><h4>計測震度<span class="yomi">けいそくしんど</span></h4><p>震度計が算出する連続的な数値。これを区切って震度階級に変換する。例えば計測震度6.5以上が震度7。</p></div><div class="gl-item" data-k="減衰げんすい地震波が伝わるうちに弱まること。震源から遠いほど揺れが小さくなる主な理由。表面波は減衰しにくい。"><h4>減衰<span class="yomi">げんすい</span></h4><p>地震波が伝わるうちに弱まること。震源から遠いほど揺れが小さくなる主な理由。表面波は減衰しにくい。</p></div><div class="gl-item" data-k="固着域こちゃくいきプレート境界でしっかりくっついてひずみをためている領域。ここが剥がれると巨大地震になる。"><h4>固着域<span class="yomi">こちゃくいき</span></h4><p>プレート境界でしっかりくっついてひずみをためている領域。ここが剥がれると巨大地震になる。</p></div><div class="gl-item" data-k="固有周期こゆうしゅうき建物や地盤が最も揺れやすい周期。木造住宅は約0.3秒、超高層ビルは数秒〜十数秒。地震波の周期と一致すると共振して揺れが増幅する。"><h4>固有周期<span class="yomi">こゆうしゅうき</span></h4><p>建物や地盤が最も揺れやすい周期。木造住宅は約0.3秒、超高層ビルは数秒〜十数秒。地震波の周期と一致すると共振して揺れが増幅する。</p></div><div class="gl-item" data-k="固有地震こゆうじしん同じ断層でほぼ同じ規模・同じ場所の地震が繰り返し起きるという考え方。長期評価の基礎になっている。"><h4>固有地震<span class="yomi">こゆうじしん</span></h4><p>同じ断層でほぼ同じ規模・同じ場所の地震が繰り返し起きるという考え方。長期評価の基礎になっている。</p></div><div class="gl-item" data-k="最大加速度さいだいかそくど揺れの激しさを示す指標。単位はgal（ガル）。瞬間的な鋭さを表すが、必ずしも被害の大きさとは一致しない。"><h4>最大加速度<span class="yomi">さいだいかそくど</span></h4><p>揺れの激しさを示す指標。単位はgal（ガル）。瞬間的な鋭さを表すが、必ずしも被害の大きさとは一致しない。</p></div><div class="gl-item" data-k="最大速度さいだいそくど地面が動く速さの最大値。単位はkine（カイン）またはcm/秒。建物被害との相関が加速度より高いとされる。"><h4>最大速度<span class="yomi">さいだいそくど</span></h4><p>地面が動く速さの最大値。単位はkine（カイン）またはcm/秒。建物被害との相関が加速度より高いとされる。</p></div><div class="gl-item" data-k="衝上断層しょうじょうだんそう傾斜が45°より緩い逆断層。低角逆断層とも。沈み込み帯のプレート境界は典型的な衝上断層。"><h4>衝上断層<span class="yomi">しょうじょうだんそう</span></h4><p>傾斜が45°より緩い逆断層。低角逆断層とも。沈み込み帯のプレート境界は典型的な衝上断層。</p></div><div class="gl-item" data-k="初期微動しょきびどうp波による最初の小さな揺れ。カタカタという揺れ。この後にs波の大きな揺れが来る。"><h4>初期微動<span class="yomi">しょきびどう</span></h4><p>P波による最初の小さな揺れ。カタカタという揺れ。この後にS波の大きな揺れが来る。</p></div><div class="gl-item" data-k="初期微動継続時間しょきびどうけいぞくじかんp波到達からs波到達までの時間。長いほど震源が遠い。大森公式で距離を推定できる。"><h4>初期微動継続時間<span class="yomi">しょきびどうけいぞくじかん</span></h4><p>P波到達からS波到達までの時間。長いほど震源が遠い。大森公式で距離を推定できる。</p></div><div class="gl-item" data-k="震央しんおう震源の真上にあたる地表の地点。ニュースの地図で×印が示される場所。"><h4>震央<span class="yomi">しんおう</span></h4><p>震源の真上にあたる地表の地点。ニュースの地図で×印が示される場所。</p></div><div class="gl-item" data-k="震央距離しんおうきょり観測点から震央までの水平距離。"><h4>震央距離<span class="yomi">しんおうきょり</span></h4><p>観測点から震央までの水平距離。</p></div><div class="gl-item" data-k="震源しんげん岩盤が壊れ始めた地下の点。巨大地震では実際にずれた範囲は広く、震源はその開始点にすぎない。"><h4>震源<span class="yomi">しんげん</span></h4><p>岩盤が壊れ始めた地下の点。巨大地震では実際にずれた範囲は広く、震源はその開始点にすぎない。</p></div><div class="gl-item" data-k="震源域しんげんいき実際にずれ動いた断層の広がり。m9級では長さ数百kmに及ぶ。"><h4>震源域<span class="yomi">しんげんいき</span></h4><p>実際にずれ動いた断層の広がり。M9級では長さ数百kmに及ぶ。</p></div><div class="gl-item" data-k="震源距離しんげんきょり観測点から震源までの直線距離。"><h4>震源距離<span class="yomi">しんげんきょり</span></h4><p>観測点から震源までの直線距離。</p></div><div class="gl-item" data-k="震度しんどその場所での揺れの強さ。気象庁震度階級では0〜7の10階級（5と6は強弱に分かれる）。観測点ごとに異なる。"><h4>震度<span class="yomi">しんど</span></h4><p>その場所での揺れの強さ。気象庁震度階級では0〜7の10階級（5と6は強弱に分かれる）。観測点ごとに異なる。</p></div><div class="gl-item" data-k="震度計しんどけい揺れの加速度を計測し、計測震度を自動算出する装置。全国に約4400か所設置されている。"><h4>震度計<span class="yomi">しんどけい</span></h4><p>揺れの加速度を計測し、計測震度を自動算出する装置。全国に約4400か所設置されている。</p></div><div class="gl-item" data-k="地震モーメントじしんもーめんと断層の面積・ずれた量・岩盤の硬さの積で表される、地震の物理的な大きさ。ここから求めるマグニチュードがmw。"><h4>地震モーメント<span class="yomi">じしんもーめんと</span></h4><p>断層の面積・ずれた量・岩盤の硬さの積で表される、地震の物理的な大きさ。ここから求めるマグニチュードがMw。</p></div><div class="gl-item" data-k="スラブ内地震すらぶないじしん沈み込んだ海洋プレート（スラブ）の内部で起きる地震。深いため揺れが広範囲に及び、異常震域を生みやすい。"><h4>スラブ内地震<span class="yomi">すらぶないじしん</span></h4><p>沈み込んだ海洋プレート（スラブ）の内部で起きる地震。深いため揺れが広範囲に及び、異常震域を生みやすい。</p></div><div class="gl-item" data-k="スリップslip断層面上でずれた量。すべり量とも。m7級で数十cm〜数m、m9級では数十mに達する。"><h4>スリップ<span class="yomi">slip</span></h4><p>断層面上でずれた量。すべり量とも。M7級で数十cm〜数m、M9級では数十mに達する。</p></div><div class="gl-item" data-k="スロッシングsloshingタンク内の液体が長周期地震動で大きく揺れる現象。石油タンクでは溢流や火災の原因になる。2003年十勝沖地震で被害が発生。"><h4>スロッシング<span class="yomi">sloshing</span></h4><p>タンク内の液体が長周期地震動で大きく揺れる現象。石油タンクでは溢流や火災の原因になる。2003年十勝沖地震で被害が発生。</p></div><div class="gl-item" data-k="正断層せいだんそう引っ張る力を受けて上盤がずり落ちる断層。海嶺や大地溝帯で見られる。日本では東北地方の一部など。"><h4>正断層<span class="yomi">せいだんそう</span></h4><p>引っ張る力を受けて上盤がずり落ちる断層。海嶺や大地溝帯で見られる。日本では東北地方の一部など。</p></div><div class="gl-item" data-k="全壊・半壊ぜんかい・はんかい建物被害の判定区分。全壊は住家の損壊が甚だしく補修では元に戻せない状態、半壊はその程度が全壊に至らないもの。り災証明の基礎になる。"><h4>全壊・半壊<span class="yomi">ぜんかい・はんかい</span></h4><p>建物被害の判定区分。全壊は住家の損壊が甚だしく補修では元に戻せない状態、半壊はその程度が全壊に至らないもの。り災証明の基礎になる。</p></div><div class="gl-item" data-k="走向そうこう断層線が地表を走る方位。「北東-南西走向」のように表す。傾斜・すべり角と合わせて断層の姿勢を決める。"><h4>走向<span class="yomi">そうこう</span></h4><p>断層線が地表を走る方位。「北東-南西走向」のように表す。傾斜・すべり角と合わせて断層の姿勢を決める。</p></div><div class="gl-item" data-k="速度層そくどそう地下の地震波の速さが異なる層構造。軟らかい表層では波が遅くなり、振幅が増幅されるため揺れが大きくなる。"><h4>速度層<span class="yomi">そくどそう</span></h4><p>地下の地震波の速さが異なる層構造。軟らかい表層では波が遅くなり、振幅が増幅されるため揺れが大きくなる。</p></div><div class="gl-item" data-k="耐震・制振・免震たいしん・せいしん・めんしん耐震＝骨組みを強くして耐える。制振＝ダンパーで揺れを吸収する。免震＝積層ゴム等で建物を地面から切り離す。免震は長周期地震動には不利な場合もある。"><h4>耐震・制振・免震<span class="yomi">たいしん・せいしん・めんしん</span></h4><p>耐震＝骨組みを強くして耐える。制振＝ダンパーで揺れを吸収する。免震＝積層ゴム等で建物を地面から切り離す。免震は長周期地震動には不利な場合もある。</p></div><div class="gl-item" data-k="断層だんそう岩盤がずれ動いた面。地震はこの面がずれることで発生する。"><h4>断層<span class="yomi">だんそう</span></h4><p>岩盤がずれ動いた面。地震はこの面がずれることで発生する。</p></div><div class="gl-item" data-k="リスクの長期評価ちょうきひょうか政府の地震調査委員会が公表する、今後30年以内の地震発生確率。活断層や海溝型地震ごとに評価されている。"><h4>リスクの長期評価<span class="yomi">ちょうきひょうか</span></h4><p>政府の地震調査委員会が公表する、今後30年以内の地震発生確率。活断層や海溝型地震ごとに評価されている。</p></div><div class="gl-item" data-k="長周期地震動ちょうしゅうきじしんどう周期2秒以上のゆっくりした揺れ。遠方まで届き、超高層ビルや石油タンクと共振して大きな被害を生む。気象庁は階級1〜4で表す。"><h4>長周期地震動<span class="yomi">ちょうしゅうきじしんどう</span></h4><p>周期2秒以上のゆっくりした揺れ。遠方まで届き、超高層ビルや石油タンクと共振して大きな被害を生む。気象庁は階級1〜4で表す。</p></div><div class="gl-item" data-k="津波つなみ海底の上下変動で海水が押し上げられて生じる波。水深が浅くなるほど波高が増す。横ずれ断層では起きにくい。"><h4>津波<span class="yomi">つなみ</span></h4><p>海底の上下変動で海水が押し上げられて生じる波。水深が浅くなるほど波高が増す。横ずれ断層では起きにくい。</p></div><div class="gl-item" data-k="トラフtrough海溝より浅く緩やかな海底の凹地。南海トラフ、相模トラフなど。プレート境界であることに変わりはない。"><h4>トラフ<span class="yomi">trough</span></h4><p>海溝より浅く緩やかな海底の凹地。南海トラフ、相模トラフなど。プレート境界であることに変わりはない。</p></div><div class="gl-item" data-k="左横ずれ断層ひだりよこずれだんそう向こう側が左へずれる断層。糸魚川-静岡構造線の一部や、トルコの東アナトリア断層など。"><h4>左横ずれ断層<span class="yomi">ひだりよこずれだんそう</span></h4><p>向こう側が左へずれる断層。糸魚川-静岡構造線の一部や、トルコの東アナトリア断層など。</p></div><div class="gl-item" data-k="表面波ひょうめんは地表付近を伝わる波。ラブ波とレイリー波がある。減衰しにくく、長周期成分を多く含む。"><h4>表面波<span class="yomi">ひょうめんは</span></h4><p>地表付近を伝わる波。ラブ波とレイリー波がある。減衰しにくく、長周期成分を多く含む。</p></div><div class="gl-item" data-k="p波ピーは地震の縦波。速さ約5〜7km/秒で最も速く到達する。進行方向に振動し、被害は小さい。緊急地震速報はこの波を検知している。"><h4>P波<span class="yomi">ピーは</span></h4><p>地震の縦波。速さ約5〜7km/秒で最も速く到達する。進行方向に振動し、被害は小さい。緊急地震速報はこの波を検知している。</p></div><div class="gl-item" data-k="伏在断層ふくざいだんそう地表に現れていない地下の断層。存在が知られていないため、突然大地震を起こすことがある。"><h4>伏在断層<span class="yomi">ふくざいだんそう</span></h4><p>地表に現れていない地下の断層。存在が知られていないため、突然大地震を起こすことがある。</p></div><div class="gl-item" data-k="噴砂ふんさ液状化で地下の砂混じりの水が地表に噴き出す現象。液状化が起きた明確な証拠になる。"><h4>噴砂<span class="yomi">ふんさ</span></h4><p>液状化で地下の砂混じりの水が地表に噴き出す現象。液状化が起きた明確な証拠になる。</p></div><div class="gl-item" data-k="プレートplate地球表面を覆う十数枚の硬い岩板。年に数cm動いており、境界で地震が多発する。日本は4枚が接する世界的にも稀な場所。"><h4>プレート<span class="yomi">plate</span></h4><p>地球表面を覆う十数枚の硬い岩板。年に数cm動いており、境界で地震が多発する。日本は4枚が接する世界的にも稀な場所。</p></div><div class="gl-item" data-k="本震・余震・前震ほんしん・よしん・ぜんしん一連の活動で最大のものが本震、後に続くのが余震、前に起きていたのが前震。前震かどうかは後からしか判断できない。"><h4>本震・余震・前震<span class="yomi">ほんしん・よしん・ぜんしん</span></h4><p>一連の活動で最大のものが本震、後に続くのが余震、前に起きていたのが前震。前震かどうかは後からしか判断できない。</p></div><div class="gl-item" data-k="マグニチュードmagnitude地震そのものの規模。1増えるとエネルギーは約32倍、2増えると約1000倍。1つの地震に1つの値。"><h4>マグニチュード<span class="yomi">magnitude</span></h4><p>地震そのものの規模。1増えるとエネルギーは約32倍、2増えると約1000倍。1つの地震に1つの値。</p></div><div class="gl-item" data-k="右横ずれ断層みぎよこずれだんそう断層をはさんで向こう側が右へずれる断層。中央構造線が代表例。どちら側から見ても「向こうが右」に見えるのが特徴。"><h4>右横ずれ断層<span class="yomi">みぎよこずれだんそう</span></h4><p>断層をはさんで向こう側が右へずれる断層。中央構造線が代表例。どちら側から見ても「向こうが右」に見えるのが特徴。</p></div><div class="gl-item" data-k="ゆっくり地震ゆっくりじしん通常より極端に遅く断層がずれる現象。スロースリップとも。揺れを感じないが、巨大地震との関連が注目されている。"><h4>ゆっくり地震<span class="yomi">ゆっくりじしん</span></h4><p>通常より極端に遅く断層がずれる現象。スロースリップとも。揺れを感じないが、巨大地震との関連が注目されている。</p></div><div class="gl-item" data-k="余震域よしんいき余震が分布する範囲。本震でずれ動いた震源域とほぼ一致するため、震源域の推定に使われる。"><h4>余震域<span class="yomi">よしんいき</span></h4><p>余震が分布する範囲。本震でずれ動いた震源域とほぼ一致するため、震源域の推定に使われる。</p></div><div class="gl-item" data-k="ラブ波love wave表面波の一種。地面が水平方向に蛇行する。建物の土台をねじるように揺らす。"><h4>ラブ波<span class="yomi">Love wave</span></h4><p>表面波の一種。地面が水平方向に蛇行する。建物の土台をねじるように揺らす。</p></div><div class="gl-item" data-k="レイリー波rayleigh wave表面波の一種。地面の粒が楕円を描いて動き、上下動を伴う。海の波のようにうねる揺れ。"><h4>レイリー波<span class="yomi">Rayleigh wave</span></h4><p>表面波の一種。地面の粒が楕円を描いて動き、上下動を伴う。海の波のようにうねる揺れ。</p></div></div><div class="gl-empty" id="glEmpty" style="display:none">該当する用語が見つかりませんでした</div></div>
     </div>
   </div>
@@ -909,7 +969,13 @@ var FAULT_LABELS = {
   "Subduction_Thrust":"沈み込み帯（逆断層）", "Spreading_Ridge":"海嶺（拡大軸）", "":"種別不明"
 };
 
+var TROUGH_DATA = {"quakes":[{"t":"nankai","d":"684/11/29","w":"天武13年","n":"白鳳（天武）地震","la":33.0,"lo":135.0,"m":8.25,"dp":null,"dth":null,"ts":null,"note":"日本最古の南海トラフ地震の記録。『日本書紀』に土佐で船が多数沈み、田畑約12km²が海に沈んだとある。"},{"t":"nankai","d":"887/08/26","w":"仁和3年","n":"仁和地震","la":33.0,"lo":135.0,"m":8.25,"dp":null,"dth":null,"ts":null,"note":"京都で家屋倒壊、摂津で津波被害。東海・南海が連動した可能性が指摘されている。"},{"t":"nankai","d":"1096/12/17","w":"永長元年","n":"永長地震（東海）","la":34.0,"lo":137.2,"m":8.25,"dp":null,"dth":null,"ts":null,"note":"東大寺の鐘が落下。伊勢・駿河で津波。3年後の康和地震と対になる東海側の地震とされる。"},{"t":"nankai","d":"1099/02/22","w":"康和元年","n":"康和地震（南海）","la":33.0,"lo":135.0,"m":8.15,"dp":null,"dth":null,"ts":null,"note":"興福寺・天王寺で被害。史料が少なく、南海トラフ地震かどうか議論がある。"},{"t":"nankai","d":"1361/08/03","w":"正平16年","n":"正平（康安）地震","la":33.0,"lo":135.0,"m":8.4,"dp":null,"dth":null,"ts":null,"note":"摂津・四天王寺が倒壊、阿波で津波。津波被害の詳細が記録された日本最古級の事例。"},{"t":"nankai","d":"1498/09/20","w":"明応7年","n":"明応地震（東海）","la":34.0,"lo":138.1,"m":8.3,"dp":null,"dth":40000,"ts":10.0,"note":"死者3〜4万人。津波で浜名湖が海とつながり「今切」ができた。鎌倉の大仏殿が流失したとの伝承も残る。"},{"t":"nankai","d":"1605/02/03","w":"慶長9年","n":"慶長地震","la":33.0,"lo":134.9,"m":7.95,"dp":null,"dth":15000,"ts":10.0,"note":"揺れは小さかったのに津波が巨大だった典型的な「津波地震」。房総から九州まで被害。"},{"t":"nankai","d":"1707/10/28","w":"宝永4年","n":"宝永地震","la":33.2,"lo":135.9,"m":8.9,"dp":null,"dth":20000,"ts":10.0,"note":"東海・南海が同時に動いた南海トラフ最大級の地震。倒壊6万戸。49日後に富士山が宝永噴火を起こした。"},{"t":"nankai","d":"1854/12/23","w":"嘉永7年","n":"安政東海地震","la":34.0,"lo":137.8,"m":8.4,"dp":null,"dth":2600,"ts":6.0,"note":"死者2000〜3000人。下田港でロシア艦ディアナ号が津波で大破した。"},{"t":"nankai","d":"1854/12/24","w":"嘉永7年","n":"安政南海地震","la":33.0,"lo":135.0,"m":8.4,"dp":null,"dth":3000,"ts":7.0,"note":"東海地震のわずか32時間後に発生。「稲むらの火」で知られる濱口梧陵の逸話はこの津波のもの。"},{"t":"nankai","d":"1944/12/07","w":"昭和19年","n":"昭和東南海地震","la":33.8,"lo":136.6,"m":7.9,"dp":40,"dth":1223,"ts":9.0,"note":"死者・行方不明1223人。戦時中のため報道が規制され「隠された地震」と呼ばれる。"},{"t":"nankai","d":"1946/12/21","w":"昭和21年","n":"昭和南海地震","la":33.0,"lo":135.6,"m":8.0,"dp":24,"dth":1330,"ts":6.6,"note":"死者1330人。前回の南海トラフ地震から既に約80年が経過している。"},{"t":"chishima","d":"1600年代前半","w":"17世紀","n":"17世紀型 超巨大地震","la":42.8,"lo":146.0,"m":8.8,"dp":null,"dth":null,"ts":20.0,"note":"文献記録はなく、津波堆積物から復元された地震。すべり量は約25mと推定。平均間隔は約340〜380年で、前回から既に約400年が経過している。"},{"t":"chishima","d":"1843/04/25","w":"天保14年","n":"天保十勝沖地震","la":41.8,"lo":144.8,"m":8.0,"dp":null,"dth":46,"ts":4.0,"note":"十勝沖と根室沖が連動したプレート間地震と推定される。厚岸で津波被害。"},{"t":"chishima","d":"1894/03/22","w":"明治27年","n":"根室半島沖地震","la":42.5,"lo":146.0,"m":7.9,"dp":null,"dth":1,"ts":4.0,"note":"根室・釧路で被害。津波の波源域は1843年の地震と重なると考えられている。"},{"t":"chishima","d":"1918/11/08","w":"大正7年","n":"ウルップ島沖地震","la":44.5,"lo":151.5,"m":8.0,"dp":null,"dth":24,"ts":12.0,"note":"千島列島中部で発生。ウルップ島で12mの津波を観測した。"},{"t":"chishima","d":"1952/03/04","w":"昭和27年","n":"十勝沖地震（1952）","la":41.71,"lo":144.15,"m":8.2,"dp":54,"dth":33,"ts":6.5,"note":"死者・行方不明33人、負傷287人、全壊815棟。厚岸で6.5mの津波。被害は北海道に集中した。"},{"t":"chishima","d":"1958/11/07","w":"昭和33年","n":"択捉島沖地震","la":44.4,"lo":148.6,"m":8.1,"dp":null,"dth":null,"ts":4.0,"note":"千島列島で発生。北海道太平洋岸でも津波を観測した。"},{"t":"chishima","d":"1963/10/13","w":"昭和38年","n":"択捉島沖地震（1963）","la":44.8,"lo":149.5,"m":8.1,"dp":null,"dth":null,"ts":4.0,"note":"5年前とほぼ同じ領域で再び発生。太平洋を横断する津波となった。"},{"t":"chishima","d":"1969/08/12","w":"昭和44年","n":"色丹島沖地震","la":43.6,"lo":147.8,"m":7.8,"dp":null,"dth":null,"ts":4.0,"note":"北海道東方沖で発生。道東沿岸に津波が到達した。"},{"t":"chishima","d":"1973/06/17","w":"昭和48年","n":"根室半島沖地震","la":43.0,"lo":145.8,"m":7.4,"dp":null,"dth":null,"ts":2.8,"note":"負傷26人。根室市で震度5。1894年の地震と同じ領域が動いたとされる。"},{"t":"chishima","d":"1994/10/04","w":"平成6年","n":"北海道東方沖地震","la":43.4,"lo":147.7,"m":8.2,"dp":28,"dth":null,"ts":3.0,"note":"負傷436人。択捉島南西沖の沈み込んだプレート内部で起きたスラブ内地震。"},{"t":"chishima","d":"2003/09/26","w":"平成15年","n":"十勝沖地震（2003）","la":41.8,"lo":144.1,"m":8.0,"dp":45,"dth":2,"ts":4.0,"note":"1952年とほぼ同じ震源域が再び動いた。苫小牧の石油タンクで長周期地震動によるスロッシング火災が発生。"},{"t":"chishima","d":"2006/11/15","w":"平成18年","n":"千島列島沖地震","la":46.6,"lo":153.3,"m":8.2,"dp":null,"dth":null,"ts":2.0,"note":"千島列島中部のプレート境界で発生。日本の太平洋沿岸にも津波が到達した。"},{"t":"chishima","d":"2007/01/13","w":"平成19年","n":"千島列島沖地震（2007）","la":46.2,"lo":154.8,"m":8.1,"dp":null,"dth":null,"ts":2.0,"note":"前年の地震の海溝側で起きた正断層型（アウターライズ地震）。"},{"t":"japan","d":"869/07/13","w":"貞観11年","n":"貞観地震","la":38.5,"lo":143.8,"m":8.4,"dp":null,"dth":1000,"ts":8.0,"note":"津波が多賀城下まで達し溺死者約1000人。東日本大震災の先行例として再評価された。"},{"t":"japan","d":"1611/12/02","w":"慶長16年","n":"慶長三陸地震","la":39.0,"lo":144.4,"m":8.1,"dp":null,"dth":5000,"ts":20.0,"note":"揺れの割に巨大な津波が襲った津波地震。北海道沖の地震とする説もある。"},{"t":"japan","d":"1677/11/04","w":"延宝5年","n":"延宝房総沖地震","la":35.5,"lo":142.0,"m":8.0,"dp":null,"dth":500,"ts":8.0,"note":"房総半島から福島にかけて津波被害。これも津波地震とされる。"},{"t":"japan","d":"1896/06/15","w":"明治29年","n":"明治三陸地震","la":39.5,"lo":144.0,"m":8.35,"dp":null,"dth":21959,"ts":38.2,"note":"死者約2.2万人。揺れは震度2〜3程度と弱かったのに最大38.2mの津波が襲った典型的な津波地震。"},{"t":"japan","d":"1933/03/03","w":"昭和8年","n":"昭和三陸地震","la":39.2,"lo":144.7,"m":8.1,"dp":null,"dth":3064,"ts":28.7,"note":"死者・行方不明3064人。海溝の外側で起きた正断層型（アウターライズ地震）。津波は最大28.7m。"},{"t":"japan","d":"1968/05/16","w":"昭和43年","n":"十勝沖地震（1968）","la":40.73,"lo":143.58,"m":7.9,"dp":null,"dth":52,"ts":5.0,"note":"名称は十勝沖だが震源は青森県東方沖で、区分上は三陸沖北部の地震。鉄筋コンクリート建物の被害が注目された。"},{"t":"japan","d":"1978/06/12","w":"昭和53年","n":"宮城県沖地震","la":38.2,"lo":142.2,"m":7.4,"dp":40,"dth":28,"ts":0.5,"note":"死者28人の多くがブロック塀の倒壊による。1981年の新耐震基準制定のきっかけとなった。"},{"t":"japan","d":"2011/03/11","w":"平成23年","n":"東北地方太平洋沖地震","la":38.1,"lo":142.86,"m":9.0,"dp":24,"dth":19759,"ts":40.1,"note":"日本の観測史上最大。震源域は南北約500km。津波の遡上高は最大40.1mに達した。"}],"zones":{"nankai":{"name":"南海トラフ 想定震源域","color":"#e91e63","prob":"60〜90%程度以上（すべり量依存BPTモデル）／ 20〜50%（BPTモデル）","mag":"M8〜M9クラス","note":"2025年9月26日、地震調査委員会が12年ぶりに算出方法を見直し、従来の「80%程度」に代えて2つの確率を併記した。どちらも最も高いⅢランクで、切迫性が高い評価に変わりはない。内閣府の2025年3月公表の被害想定では、最悪のケースで死者29万8000人、全壊焼失235万棟とされる。","poly":[[34.95,138.75],[33.8,138.1],[32.9,136.4],[32.3,134.4],[31.6,132.4],[30.9,131.2],[31.3,130.7],[32.6,131.6],[33.5,133.3],[34.1,134.9],[34.5,136.4],[34.9,137.6],[35.1,138.5],[34.95,138.75]]},"chishima":{"name":"千島海溝 想定震源域","color":"#3f51b5","prob":"超巨大地震（17世紀型）7〜40% / 根室沖 70%程度 / 色丹島・択捉島沖 60%程度","mag":"M8.8以上（17世紀型）、根室沖 M7.8〜8.5程度","note":"北海道東部の湿原から見つかった津波堆積物により、約340〜380年間隔で海溝軸まで破壊が達する超巨大地震が繰り返してきたことが判明した。2026年2月の海底地殻変動観測では、根室沖の浅部プレート境界がほぼ100%固着していることが確認され、再来の切迫が指摘されている。","poly":[[41.4,144.4],[42.9,146.6],[44.3,149.2],[45.6,151.8],[46.6,153.8],[47.3,152.6],[46.2,150.0],[45.0,147.4],[43.6,145.2],[42.6,143.3],[41.4,144.4]]},"japan":{"name":"日本海溝 想定震源域","color":"#00897b","prob":"ほぼ0〜70%（領域により異なる）","mag":"M7〜M9クラス","note":"2011年の東北地方太平洋沖地震（M9.0）が発生した領域を含む。南は房総沖まで続き、津波地震やアウターライズ地震も繰り返し起きている。","poly":[[41.4,144.4],[40.2,144.2],[38.6,143.8],[37.0,142.6],[35.6,141.9],[34.9,141.4],[35.0,140.4],[36.4,140.7],[38.0,141.4],[39.4,141.8],[40.8,142.0],[41.6,142.4],[41.4,144.4]]}}};
+
+var TROUGH_COLORS = { nankai:"#e91e63", chishima:"#3f51b5", japan:"#00897b" };
+var TROUGH_NAMES  = { nankai:"南海トラフ", chishima:"千島海溝", japan:"日本海溝" };
+
 var map, cluster;
+var histLayer = null, zoneLayer = null;
 var faultLayer = null, plateLayer = null;
 var chartsVisible = false;
 var markerList = [];    /* filteredData と同じ順のマーカー配列 */
@@ -960,6 +1026,7 @@ function init(){
 
   buildFilterOptions();
   buildFaultLayers();
+  buildTroughLayers();
   applyFilters();
 
   document.getElementById('totalLabel').textContent =
@@ -1068,18 +1135,104 @@ function buildFaultLayers(){
   }
 }
 
+function buildTroughLayers(){
+  /* --- 歴史地震のマーカー --- */
+  histLayer = L.layerGroup();
+  var qs = TROUGH_DATA.quakes;
+  for(var i=0;i<qs.length;i++){
+    var q = qs[i];
+    var col = TROUGH_COLORS[q.t] || '#757575';
+    var sz  = Math.round(20 + (q.m - 7.4) * 8);
+    if(sz < 20) sz = 20;
+    if(sz > 40) sz = 40;
+
+    var icon = L.divIcon({
+      className: 'hist-icon',
+      html: '<div class="hist-mk" style="background:' + col + '"><span>'
+          + q.m.toFixed(1) + '</span></div>',
+      iconSize: [sz, sz],
+      iconAnchor: [sz/2, sz/2]
+    });
+
+    var mk = L.marker([q.la, q.lo], { icon: icon, zIndexOffset: 500 });
+    mk.bindPopup(troughPopup(q), { maxWidth: 330 });
+    mk.bindTooltip(q.d.substring(0,4) + '年 ' + q.n + ' M' + q.m, { direction:'top' });
+    histLayer.addLayer(mk);
+  }
+
+  /* --- 想定震源域のポリゴン --- */
+  zoneLayer = L.layerGroup();
+  var keys = Object.keys(TROUGH_DATA.zones);
+  for(var k=0;k<keys.length;k++){
+    var z = TROUGH_DATA.zones[keys[k]];
+    var poly = L.polygon(z.poly, {
+      color: z.color, weight: 2.5, opacity: .9,
+      fillColor: z.color, fillOpacity: .13, dashArray: '8,5'
+    });
+    poly.bindPopup(
+      '<div class="pop"><h4>🔶 ' + z.name + '</h4><table>'
+      + '<tr><td>想定規模</td><td><b>' + z.mag + '</b></td></tr>'
+      + '<tr><td>30年確率</td><td><b>' + z.prob + '</b></td></tr>'
+      + '</table><div class="note">📝 ' + z.note
+      + '<br><br>※ 表示している範囲は公表図をもとにした<b>概略の外形</b>です。'
+      + '正確な区域は地震調査研究推進本部・内閣府の資料をご確認ください。</div></div>',
+      { maxWidth: 340 }
+    );
+    zoneLayer.addLayer(poly);
+  }
+}
+
+function troughPopup(q){
+  var col = TROUGH_COLORS[q.t] || '#757575';
+  var h = '<div class="pop">';
+  h += '<h4>' + q.n + '<br><span style="font-size:11.5px;color:#6b7280;font-weight:400">'
+     + TROUGH_NAMES[q.t] + '　' + q.w + '</span></h4>';
+  h += '<table>';
+  h += '<tr><td>発生日</td><td>' + q.d + '</td></tr>';
+  h += '<tr><td>マグニチュード</td><td><b style="color:' + col + '">M ' + q.m + '</b></td></tr>';
+  if(q.dp) h += '<tr><td>震源の深さ</td><td>' + q.dp + ' km</td></tr>';
+  h += '<tr><td>震源域</td><td>' + TROUGH_NAMES[q.t] + '</td></tr>';
+  h += '</table>';
+
+  h += '<div class="sec">🚨 被害・津波</div><table>';
+  h += '<tr><td>死者</td><td>' + (q.dth === null ? '<span style="color:#9aa0a6">記録なし・不明</span>'
+                                                 : '<b>' + num(q.dth) + '</b> 人') + '</td></tr>';
+  h += '<tr><td>津波の高さ</td><td>' + (q.ts === null ? '<span style="color:#9aa0a6">不明</span>'
+                                                     : '最大 <b>' + q.ts + '</b> m') + '</td></tr>';
+  h += '</table>';
+  h += '<div class="note">📝 ' + q.note
+     + '<br><br>※ 1900年以前の規模・被害は文献や津波堆積物からの<b>推定値</b>で、研究者により幅があります。</div>';
+  h += '</div>';
+  return h;
+}
+
 function toggleLayer(kind){
+  if(kind === 'hist'){
+    var oh = document.getElementById('histToggle').checked;
+    if(oh) map.addLayer(histLayer); else map.removeLayer(histLayer);
+    document.getElementById('lb-hist').classList.toggle('on', oh);
+    if(oh) map.fitBounds(histLayer.getBounds(), { padding:[40,40], maxZoom:6 });
+  }
+  if(kind === 'zone'){
+    var oz = document.getElementById('zoneToggle').checked;
+    if(oz) map.addLayer(zoneLayer); else map.removeLayer(zoneLayer);
+    document.getElementById('lb-zone').classList.toggle('on', oz);
+    if(oz) map.fitBounds(zoneLayer.getBounds(), { padding:[40,40], maxZoom:6 });
+  }
   if(kind === 'fault'){
     var on = document.getElementById('faultToggle').checked;
     if(on) map.addLayer(faultLayer); else map.removeLayer(faultLayer);
     document.getElementById('lb-fault').classList.toggle('on', on);
-  }else{
+  }
+  if(kind === 'plate'){
     var on2 = document.getElementById('plateToggle').checked;
     if(on2) map.addLayer(plateLayer); else map.removeLayer(plateLayer);
     document.getElementById('lb-plate').classList.toggle('on', on2);
   }
   var any = document.getElementById('faultToggle').checked
-         || document.getElementById('plateToggle').checked;
+         || document.getElementById('plateToggle').checked
+         || document.getElementById('histToggle').checked
+         || document.getElementById('zoneToggle').checked;
   document.getElementById('faultLegend').classList.toggle('on', any);
 }
 
@@ -1613,7 +1766,7 @@ function openLearn(tab){
   document.body.style.overflow = 'hidden';
   if(tab){
     var btns = document.querySelectorAll('.learn-tab');
-    var map = { mech:0, fault:1, wave:2, gloss:3 };
+    var map = { mech:0, fault:1, wave:2, trough:3, gloss:4 };
     if(map[tab] !== undefined) showLearnTab(tab, btns[map[tab]]);
   }
 }

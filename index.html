@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DWA防災情報センター｜グローバル地震マッピングシステム v6.1</title>
+<title>DWA防災情報センター｜グローバル地震マッピングシステム v6.2</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
@@ -169,16 +169,53 @@ padding:6px 0 16px;
 .bar-val{font-size:10px;fill:var(--text-primary);font-weight:600}
 .grid-line{stroke:var(--border-color);stroke-width:1}
 
-/* ---------- 断層の凡例 ---------- */
-.fault-legend{
-position:absolute;bottom:18px;left:12px;z-index:800;
+/* ---------- 地図上の凡例（折り畳み式） ---------- */
+.mleg{
+position:absolute;bottom:16px;z-index:800;
 background:var(--bg-card);border:1px solid var(--border-color);
-border-radius:8px;padding:9px 11px;font-size:11.5px;
-box-shadow:0 2px 10px rgba(0,0,0,.18);display:none;
+border-radius:9px;font-size:11.5px;
+box-shadow:0 3px 12px rgba(0,0,0,.22);
+max-width:min(45vw,230px);overflow:hidden;
 }
-.fault-legend.on{display:block}
-.fault-legend div{display:flex;align-items:center;gap:6px;margin:3px 0}
-.fault-legend .ln{width:20px;height:3px;border-radius:2px;flex-shrink:0}
+.mleg.left{left:12px}
+.mleg.right{right:12px}
+.mleg.hidden{display:none}
+
+.ml-head{
+width:100%;display:flex;align-items:center;gap:7px;
+padding:8px 11px;border:none;background:transparent;
+color:var(--text-primary);font-family:inherit;
+font-size:11.5px;font-weight:700;cursor:pointer;text-align:left;
+}
+.ml-head:hover{background:var(--bg-secondary)}
+.ml-head .arw{margin-left:auto;font-size:9px;color:var(--text-muted);transition:transform .2s}
+.mleg.open .ml-head .arw{transform:rotate(180deg)}
+.ml-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+.ml-body{display:none;padding:2px 11px 10px;border-top:1px solid var(--border-color)}
+.mleg.open .ml-body{display:block}
+.ml-body div{display:flex;align-items:center;gap:6px;margin:3px 0}
+.ml-body .grp{font-weight:700;margin:7px 0 4px;display:block}
+.ml-body .ln{width:20px;height:3px;border-radius:2px;flex-shrink:0}
+
+/* すべて畳む／開く */
+.leg-all{
+position:absolute;top:12px;right:12px;z-index:801;
+background:var(--bg-card);border:1px solid var(--border-color);
+border-radius:99px;padding:7px 14px;
+color:var(--text-primary);font-family:inherit;font-size:11.5px;font-weight:600;
+cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);
+display:flex;align-items:center;gap:6px;
+}
+.leg-all:hover{border-color:var(--accent);color:var(--accent)}
+.leg-all:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+@media(max-width:600px){
+.mleg{max-width:min(60vw,190px);font-size:11px}
+.mleg.left{left:8px}
+.mleg.right{right:8px}
+.leg-all{top:8px;right:8px;padding:6px 11px;font-size:11px}
+}
 
 /* ---------- マップ ---------- */
 .map-wrap{
@@ -711,29 +748,44 @@ opacity:0;animation:spFade .6s ease 1.9s forwards;
 
   <div class="map-wrap">
     <div id="map"></div>
-    <div class="fault-legend" id="faultLegend">
-      <div style="font-weight:700;margin-bottom:4px">断層・プレート境界</div>
-      <div><span class="ln" style="background:#d32f2f"></span>逆断層</div>
-      <div><span class="ln" style="background:#1976d2"></span>正断層</div>
-      <div><span class="ln" style="background:#f57c00"></span>右横ずれ</div>
-      <div><span class="ln" style="background:#7b1fa2"></span>左横ずれ</div>
-      <div><span class="ln" style="background:#00897b"></span>沈み込み帯</div>
-      <div><span class="ln" style="background:#00bcd4;height:4px"></span>プレート境界</div>
-      <div style="font-weight:700;margin:6px 0 4px">歴史地震・想定震源域</div>
-      <div><span class="dot" style="background:#e91e63"></span>南海トラフ</div>
-      <div><span class="dot" style="background:#3f51b5"></span>千島海溝</div>
-      <div><span class="dot" style="background:#00897b"></span>日本海溝</div>
+    <button class="leg-all" id="legAll" onclick="toggleAllLegend()">
+      <span id="legAllIcon">▾</span><span id="legAllTxt">凡例を畳む</span>
+    </button>
+
+    <div class="mleg left open hidden" id="faultLegend">
+      <button class="ml-head" onclick="toggleLegend('faultLegend')">
+        <span>🔻 断層・震源域</span><span class="arw">▲</span>
+      </button>
+      <div class="ml-body">
+        <span class="grp">断層・プレート境界</span>
+        <div><span class="ln" style="background:#d32f2f"></span>逆断層</div>
+        <div><span class="ln" style="background:#1976d2"></span>正断層</div>
+        <div><span class="ln" style="background:#f57c00"></span>右横ずれ</div>
+        <div><span class="ln" style="background:#7b1fa2"></span>左横ずれ</div>
+        <div><span class="ln" style="background:#00897b"></span>沈み込み帯</div>
+        <div><span class="ln" style="background:#00bcd4;height:4px"></span>プレート境界</div>
+        <span class="grp">歴史地震・想定震源域</span>
+        <div><span class="dot" style="background:#e91e63"></span>南海トラフ</div>
+        <div><span class="dot" style="background:#3f51b5"></span>千島海溝</div>
+        <div><span class="dot" style="background:#00897b"></span>日本海溝</div>
+      </div>
     </div>
-    <div class="legend">
-      <div><span class="dot" style="background:#7b1fa2"></span>震度7</div>
-      <div><span class="dot" style="background:#e53935"></span>震度6強</div>
-      <div><span class="dot" style="background:#ff5722"></span>震度6弱</div>
-      <div><span class="dot" style="background:#ff9800"></span>震度5強</div>
-      <div><span class="dot" style="background:#ffc107"></span>震度5弱</div>
-      <div style="border-top:1px solid var(--border-color);margin:4px 0;padding-top:4px">
-        <span class="dot" style="background:#f4511e"></span>震度6（旧）</div>
-      <div><span class="dot" style="background:#ffca28"></span>震度5（旧）</div>
-      <div><span class="dot" style="background:#0288d1"></span>海外</div>
+
+    <div class="mleg right open" id="intLegend">
+      <button class="ml-head" onclick="toggleLegend('intLegend')">
+        <span>⚡ 震度の色</span><span class="arw">▲</span>
+      </button>
+      <div class="ml-body">
+        <div><span class="dot" style="background:#7b1fa2"></span>震度7</div>
+        <div><span class="dot" style="background:#e53935"></span>震度6強</div>
+        <div><span class="dot" style="background:#ff5722"></span>震度6弱</div>
+        <div><span class="dot" style="background:#ff9800"></span>震度5強</div>
+        <div><span class="dot" style="background:#ffc107"></span>震度5弱</div>
+        <span class="grp">旧階級・海外</span>
+        <div><span class="dot" style="background:#f4511e"></span>震度6（旧）</div>
+        <div><span class="dot" style="background:#ffca28"></span>震度5（旧）</div>
+        <div><span class="dot" style="background:#0288d1"></span>海外</div>
+      </div>
     </div>
   </div>
 
@@ -795,6 +847,8 @@ opacity:0;animation:spFade .6s ease 1.9s forwards;
   <a href="https://mkms0822-ops.github.io/rainsimulator/" target="_blank" rel="noopener">🌧 レインシミュレーター</a>
   <a href="https://mkms0822-ops.github.io/jishinrisuku/" target="_blank" rel="noopener">⚠️ 地震リスク診断</a>
   <a href="https://mkms0822-ops.github.io/nankaitorafutunamisinndann/" target="_blank" rel="noopener">🌊 南海トラフ津波診断</a>
+  <div class="grp">このサイトについて</div>
+  <a onclick="openLearn('guide')">📘 取扱説明・使い方ガイド</a>
   <div class="grp">学ぶ</div>
   <a onclick="openLearn('mech')">🌏 地震のメカニズム</a>
   <a onclick="openLearn('fault')">🔻 断層の種類（図解）</a>
@@ -809,20 +863,22 @@ opacity:0;animation:spFade .6s ease 1.9s forwards;
   <div class="learn-panel">
     <div class="learn-head">
       <div>
-        <h2>📚 地震のしくみ・用語解説</h2>
-        <p>イラストで学ぶ地震のメカニズムと専門用語</p>
+        <h2>📚 使い方と地震の解説</h2>
+        <p>このサイトの取扱説明と、イラストで学ぶ地震のしくみ</p>
       </div>
       <button class="learn-close" onclick="closeLearn()" aria-label="閉じる">✕</button>
     </div>
     <div class="learn-tabs">
-      <button class="learn-tab on" onclick="showLearnTab('mech',this)">🌏 メカニズム</button>
+      <button class="learn-tab on" onclick="showLearnTab('guide',this)">📘 使い方</button>
+      <button class="learn-tab" onclick="showLearnTab('mech',this)">🌏 メカニズム</button>
       <button class="learn-tab" onclick="showLearnTab('fault',this)">🔻 断層の種類</button>
       <button class="learn-tab" onclick="showLearnTab('wave',this)">〰️ 地震波・長周期</button>
       <button class="learn-tab" onclick="showLearnTab('trough',this)">🌊 海溝型の履歴</button>
       <button class="learn-tab" onclick="showLearnTab('gloss',this)">📖 用語集</button>
     </div>
     <div class="learn-body">
-      <div class="learn-sec on" id="sec-mech"><div class="learn-intro">地震がなぜ起きるのか、どう伝わるのかを図で解説します。項目をタップすると開きます。</div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>① 地震とは何か — 岩盤が「ずれて壊れる」現象</span><span class="arw">▶</span></button><div class="acc-body"><p>地震は、地下の岩盤に長い年月をかけて力がたまり、耐えきれなくなった岩盤が<b>ある面に沿って一気にずれ動く</b>現象です。このずれた面を<b>断層</b>、ずれ動いた時に発生する振動が地面に伝わったものが<b>地震波</b>です。</p><p>よく「地面が割れて地震が起きる」と言われますが、順序は逆です。岩盤が壊れた結果として揺れが起き、その揺れが地震波として四方に広がります。</p>
+      <div class="learn-sec on" id="sec-guide"><div class="learn-intro">このページの使い方をひととおりまとめました。最初に「① 何ができるのか」だけ読めば、あとは触りながら覚えられます。</div><div class="acc open"><button class="acc-head" onclick="toggleAcc(this)"><span>① このサイトで何ができるのか</span><span class="arw">▶</span></button><div class="acc-body"><p>1902年から2026年までの<b>124年分・737件</b>の地震を地図上にまとめたものです。できることは大きく4つあります。</p><table><tr><th>できること</th><th>使う場所</th></tr><tr><td>条件を決めて地震を探す</td><td>画面上部のフィルターと震度チェック</td></tr><tr><td>1件ずつ詳しく見る</td><td>地図のマーカー／一覧／ドロップダウン</td></tr><tr><td>傾向をグラフで確かめる</td><td>「📊 統計グラフを表示」ボタン</td></tr><tr><td>地震のしくみを学ぶ</td><td>メニュー内の各解説ページ</td></tr></table><div class="tip">💡 収録しているのは<b>震度5弱以上</b>の地震です。震度4以下は含まれません。海外は「Mw8.0以上、または死者1,000人以上」を基準にしています。</div></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>② 地震を絞り込む</span><span class="arw">▶</span></button><div class="acc-body"><p>画面上部に2段のフィルターがあります。<b>上段の6つは選ぶとすぐ反映され、震度のチェックだけは「🔍 検索」ボタンを押してから反映されます。</b></p><p><b>上段：6つのプルダウン</b></p><table><tr><th>📍 地域</th><td>日本国内か海外か</td></tr><tr><th>📊 M</th><td>マグニチュードの下限（M5.0以上など）</td></tr><tr><th>🗾 地域名</th><td>都道府県。北海道から沖縄へ地図どおりの順。海外は国名で末尾にまとまる</td></tr><tr><th>📅 年</th><td>1902年〜2026年</td></tr><tr><th>📆 月</th><td>1月〜12月</td></tr><tr><th>🌙 月相</th><td>新月から下弦後まで8区分</td></tr></table><p><b>下段：震度のチェックボックス</b></p><p>5弱・5強・6弱・6強・7・海外から<b>複数選べます</b>。何もチェックしなければ全件が対象です。選んだあと「🔍 検索」を押してください。</p><div class="warn">⚠️ 1996年9月以前は震度に「弱・強」の区分がありませんでした。その時代の記録は<b>震度5（旧）・震度6（旧）</b>として別の色で表示されます。旧震度5は現在の5弱と5強のどちらだったか分からないため、<b>「5弱」でも「5強」でも検索に引っかかります</b>（二重には数えません）。</div><p>条件をすべて消したいときは「条件リセット」を押してください。</p></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>③ 地図の見方</span><span class="arw">▶</span></button><div class="acc-body"><p><b>マーカーの色と大きさ</b></p><p>丸い印が1件の地震です。色は震度、大きさは震度の強さを表します。右下の「⚡ 震度の色」で対応を確認できます。ひし形の印は海溝型の歴史地震です。</p><p><b>重なったマーカーを開く</b></p><p>同じ場所で何度も地震が起きているため、マーカーは数字入りの丸にまとめられています。<b>クリックすると拡大し、完全に同じ座標のものは放射状に展開されて1件ずつ選べます。</b></p><p><b>ポップアップに出る情報</b></p><ul><li>発生日時、マグニチュード、震度、震源の深さ</li><li>月齢と月相</li><li>死者・負傷者・家屋全壊・半壊</li><li>経済損失（円を主表示、ドルを併記。1ドル=150円換算）</li><li>📝 備考（その地震の経緯や特記事項）</li></ul><div class="tip">💡 被害の数字が0のものは「記録なし、または未集計」です。古い地震ほど記録が残っていません。</div></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>④ 重ねて表示する（断層・震源域）</span><span class="arw">▶</span></button><div class="acc-body"><p>地図の上に4種類のレイヤーを重ねられます。チェックを入れると表示されます。</p><table><tr><th>🔻 活断層</th><td>日本周辺の687本。線をクリックすると断層名と種別が出る</td></tr><tr><th>🌐 プレート境界</th><td>世界のプレート境界。海外の地震がこの線上に並ぶのが分かる</td></tr><tr><th>📜 海溝型の歴史地震</th><td>南海トラフ・千島海溝・日本海溝の33件。ひし形で表示</td></tr><tr><th>🔶 想定震源域</th><td>3つの震源域の範囲。タップすると30年確率が出る</td></tr></table><p><b>凡例を畳む</b></p><p>レイヤーをONにすると地図の左下に凡例が出ます。見出しをタップすると畳めます。右上の「凡例を畳む」ボタンで<b>左右まとめて開閉</b>できます。開閉の状態は次に開いたときも保たれます。スマホでは最初から畳まれた状態で表示されます。</p></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>⑤ 目的の地震を見つける</span><span class="arw">▶</span></button><div class="acc-body"><p>探し方は3つあります。</p><p><b>1. ドロップダウンから選ぶ</b></p><p>地図のすぐ上にある「📋 地震を選択」です。<b>検索結果の全件</b>が新しい順に並びます。選ぶと地図が自動で移動し、まとまっていたマーカーも展開されてポップアップが開きます。</p><p><b>2. 一覧から選ぶ</b></p><p>グラフの下にあるカード形式の一覧です。クリックすると同じように地図へ飛びます。最初は100件表示で、<b>「さらに100件を表示」</b>または<b>「すべて表示」</b>で増やせます。</p><p><b>3. 地図から直接探す</b></p><p>地域が分かっているときは、地図を拡大してマーカーをクリックするのが早いです。</p></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>⑥ 統計グラフを読む</span><span class="arw">▶</span></button><div class="acc-body"><p>「📊 統計グラフを表示」を押すと8種類のグラフが出ます。<b>グラフは絞り込みの結果に連動します。</b>条件を変えるとその範囲の統計になります。</p><ol style="margin-left:20px"><li>年別の発生件数</li><li>震度別の内訳</li><li>月別の発生件数</li><li>月相別の発生件数</li><li>マグニチュード分布</li><li>地域別 TOP12</li><li>死者数の多い地震 TOP10</li><li>震源の深さ分布</li></ol><p><b>横幅の調整</b></p><p>年別グラフは125年分あるため、画面が狭いと横スクロールになります。グラフ欄の上の<b>「−」「＋」</b>で60%〜450%に拡大縮小でき、140%以上にすると全年のラベルが表示されます。</p><div class="warn">⚠️ 月相別グラフを読むときの注意。8つの区分は<b>日数の幅が均等ではありません</b>（上弦の半月は5.0日、上弦後は2.5日）。幅の広い区分ほど件数が多くなるのは当然なので、件数そのものではなく<b>1か月に占める割合と比べて</b>判断してください。</div></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>⑦ 表示を変える・保存する</span><span class="arw">▶</span></button><div class="acc-body"><table><tr><th>🔄 再読込</th><td>最初の状態に戻す</td></tr><tr><th>🖨 印刷</th><td>表示中の内容を印刷・PDF保存する</td></tr><tr><th>🌓 テーマ</th><td>明るい表示と暗い表示を切り替える。地図も一緒に暗くなる</td></tr><tr><th>☰ メニュー</th><td>解説ページや関連サイトへのリンク</td></tr></table><p>テーマの設定と凡例の開閉状態はブラウザに保存され、次回も引き継がれます。</p></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>⑧ データの出典と注意</span><span class="arw">▶</span></button><div class="acc-body"><p><b>主な出典</b></p><ul><li>気象庁 震度データベース、過去の地震津波災害</li><li>消防庁 災害情報、内閣府 防災情報</li><li>地震調査研究推進本部 長期評価</li><li>USGS、NOAA/NCEI Significant Earthquake Database</li><li>GEM Global Active Faults Database（活断層）</li><li>産業技術総合研究所（津波堆積物調査）</li></ul><div class="warn">⚠️ <b>数値の扱いについて</b><br>・1900年以前の規模と被害は推定値で、研究者により幅があります<br>・被害数値は資料により異なる場合があり、本データは代表的な値を採用しています<br>・経済損失は当時の公表額をもとにした概算で、物価変動は考慮していません<br>・想定震源域の範囲は公表図をもとにした<b>概略の外形</b>です<br>・古い座標は震央地名の代表点を用いており、実際の震央と数kmずれることがあります</div><p>防災上の判断をされる際は、必ず気象庁や自治体の公式発表をご確認ください。</p></div></div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>⑨ うまくいかないとき</span><span class="arw">▶</span></button><div class="acc-body"><table><tr><th>症状</th><th>対処</th></tr><tr><td>地図が表示されない</td><td>インターネット接続をご確認ください。地図の画像は通信で取得しています</td></tr><tr><td>検索しても0件になる</td><td>条件が厳しすぎます。「条件リセット」を押してやり直してください</td></tr><tr><td>マーカーが押せない</td><td>まとまった丸を一度クリックすると展開されます。それでも重なる場合はドロップダウンから選んでください</td></tr><tr><td>グラフの文字が読めない</td><td>「＋」で拡大するか、横にスクロールしてください</td></tr><tr><td>動作が重い</td><td>一覧を「すべて表示」にしていると重くなります。再読込すると100件表示に戻ります</td></tr></table></div></div></div>
+      <div class="learn-sec" id="sec-mech"><div class="learn-intro">地震がなぜ起きるのか、どう伝わるのかを図で解説します。項目をタップすると開きます。</div><div class="acc"><button class="acc-head" onclick="toggleAcc(this)"><span>① 地震とは何か — 岩盤が「ずれて壊れる」現象</span><span class="arw">▶</span></button><div class="acc-body"><p>地震は、地下の岩盤に長い年月をかけて力がたまり、耐えきれなくなった岩盤が<b>ある面に沿って一気にずれ動く</b>現象です。このずれた面を<b>断層</b>、ずれ動いた時に発生する振動が地面に伝わったものが<b>地震波</b>です。</p><p>よく「地面が割れて地震が起きる」と言われますが、順序は逆です。岩盤が壊れた結果として揺れが起き、その揺れが地震波として四方に広がります。</p>
 <svg class="ill" viewBox="0 0 460 210">
   <rect x="20" y="70" width="420" height="120" fill="#c8a882" opacity=".35"/>
   <line x1="20" y1="70" x2="440" y2="70" stroke="#6d4c41" stroke-width="2.5"/>
@@ -1312,6 +1368,7 @@ function init(){
   buildFilterOptions();
   buildFaultLayers();
   buildTroughLayers();
+  loadLegendState();
   applyFilters();
 
   document.getElementById('totalLabel').textContent =
@@ -1405,6 +1462,57 @@ function regionKey(q){
   var m = q.location.match(/^(北海道|東京都|京都府|大阪府|.{2,3}県)/);
   if(m) return m[1];
   return 'その他（海域など）';
+}
+
+/* =========================================================
+   地図上の凡例の開閉
+   ========================================================= */
+function toggleLegend(id){
+  var el = document.getElementById(id);
+  if(!el) return;
+  el.classList.toggle('open');
+  saveLegendState();
+  syncLegAll();
+}
+
+function toggleAllLegend(){
+  var els = document.querySelectorAll('.mleg:not(.hidden)');
+  var anyOpen = false;
+  for(var i=0;i<els.length;i++) if(els[i].classList.contains('open')) anyOpen = true;
+  for(var j=0;j<els.length;j++) els[j].classList.toggle('open', !anyOpen);
+  saveLegendState();
+  syncLegAll();
+}
+
+/* ボタンの表示を現在の状態に合わせる */
+function syncLegAll(){
+  var els = document.querySelectorAll('.mleg:not(.hidden)');
+  var anyOpen = false;
+  for(var i=0;i<els.length;i++) if(els[i].classList.contains('open')) anyOpen = true;
+  document.getElementById('legAllIcon').textContent = anyOpen ? '▾' : '▸';
+  document.getElementById('legAllTxt').textContent  = anyOpen ? '凡例を畳む' : '凡例を開く';
+}
+
+function saveLegendState(){
+  try{
+    var st = {};
+    var els = document.querySelectorAll('.mleg');
+    for(var i=0;i<els.length;i++) st[els[i].id] = els[i].classList.contains('open');
+    localStorage.setItem('eq-legend', JSON.stringify(st));
+  }catch(e){}
+}
+
+function loadLegendState(){
+  var narrow = window.innerWidth < 700;
+  var st = null;
+  try{ st = JSON.parse(localStorage.getItem('eq-legend') || 'null'); }catch(e){}
+  var els = document.querySelectorAll('.mleg');
+  for(var i=0;i<els.length;i++){
+    var id = els[i].id;
+    var open = (st && st[id] !== undefined) ? st[id] : !narrow;  /* 画面が狭いときは畳んでおく */
+    els[i].classList.toggle('open', open);
+  }
+  syncLegAll();
 }
 
 /* =========================================================
@@ -1573,7 +1681,8 @@ function toggleLayer(kind){
          || document.getElementById('plateToggle').checked
          || document.getElementById('histToggle').checked
          || document.getElementById('zoneToggle').checked;
-  document.getElementById('faultLegend').classList.toggle('on', any);
+  document.getElementById('faultLegend').classList.toggle('hidden', !any);
+  syncLegAll();
 }
 
 /* =========================================================
@@ -2225,7 +2334,7 @@ function openLearn(tab){
   document.body.style.overflow = 'hidden';
   if(tab){
     var btns = document.querySelectorAll('.learn-tab');
-    var map = { mech:0, fault:1, wave:2, trough:3, gloss:4 };
+    var map = { guide:0, mech:1, fault:2, wave:3, trough:4, gloss:5 };
     if(map[tab] !== undefined) showLearnTab(tab, btns[map[tab]]);
   }
 }

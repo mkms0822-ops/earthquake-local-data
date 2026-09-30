@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>グローバル地震マッピングシステム v5.6</title>
+<title>グローバル地震マッピングシステム v5.7</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
@@ -119,7 +119,36 @@ color:var(--accent);margin-bottom:5px;
 font-size:12.5px;color:var(--text-muted);line-height:1.75;
 margin-bottom:16px;max-width:62em;
 }
-.chart-card svg{width:100%;height:auto;display:block;overflow:visible}
+.chart-scroll{
+overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+padding-bottom:4px;
+}
+.chart-scroll svg{display:block;overflow:visible}
+.chart-card svg{max-width:none;height:auto}
+.chart-scroll::-webkit-scrollbar{height:7px}
+.chart-scroll::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:99px}
+.chart-scroll::-webkit-scrollbar-track{background:transparent}
+.scroll-hint{
+font-size:11.5px;color:var(--text-muted);margin-top:6px;
+display:flex;align-items:center;gap:5px;
+}
+.zoombar{
+display:flex;align-items:center;gap:7px;margin-bottom:12px;flex-wrap:wrap;
+}
+.zoombar span{font-size:12px;color:var(--text-muted)}
+.zbtn{
+width:34px;height:34px;border:1px solid var(--border-color);
+background:var(--bg-card);color:var(--text-primary);
+border-radius:8px;cursor:pointer;font-size:17px;font-weight:700;
+display:flex;align-items:center;justify-content:center;font-family:inherit;
+}
+.zbtn:hover{border-color:var(--accent);color:var(--accent)}
+.zbtn:disabled{opacity:.4;cursor:not-allowed}
+.zbtn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.zlevel{
+font-size:12.5px;font-weight:700;min-width:46px;text-align:center;
+color:var(--text-primary);
+}
 .charts-head{
 padding:6px 0 16px;
 }
@@ -546,14 +575,21 @@ padding:11px 14px;margin-bottom:8px;background:var(--bg-card);
     <div class="charts-head">
       <h3>📊 データで見る地震</h3>
       <p>上のフィルターで絞り込んだ結果が、そのままグラフに反映されます。条件を変えながら見比べてみてください。</p>
+      <div class="zoombar">
+        <span>グラフの横幅</span>
+        <button class="zbtn" id="zOut" onclick="zoomChart(-1)" aria-label="縮小">−</button>
+        <span class="zlevel" id="zLv">100%</span>
+        <button class="zbtn" id="zIn" onclick="zoomChart(1)" aria-label="拡大">＋</button>
+        <button class="btn btn-ghost" onclick="zoomChart(0)" style="padding:7px 13px;font-size:12.5px">リセット</button>
+      </div>
     </div>
     <div class="chart-grid">
-      <div class="chart-card"><span class="chart-no">01</span><h4>📅 年別の発生件数</h4><p class="chart-cap">どの年に地震が集中したかが分かります。2011年の東日本大震災、2016年の熊本地震のように、大きな地震が起きた年は余震で件数が跳ね上がります。</p><div id="chartYear"></div></div>
-      <div class="chart-card"><span class="chart-no">02</span><h4>⚡ 震度別の内訳</h4><p class="chart-cap">震度が1段階上がるごとに件数は大きく減ります。震度7は30年間でわずか8件。逆に震度5弱が大半を占めることが読み取れます。</p><div id="chartIntensity"></div></div>
-      <div class="chart-card"><span class="chart-no">03</span><h4>📆 月別の発生件数</h4><p class="chart-cap">地震に季節性はないとされています。棒の高さがおおむね揃っていれば、特定の月に偏っていないことの裏づけになります。</p><div id="chartMonth"></div></div>
+      <div class="chart-card"><span class="chart-no">01</span><h4>📅 年別の発生件数</h4><p class="chart-cap">どの年に地震が集中したかが分かります。2011年の東日本大震災や2016年の熊本地震のように、大きな地震が起きた年は余震で件数が跳ね上がります。1902年から125年分あるため、横にスクロールしてご覧ください。</p><div id="chartYear"></div></div>
+      <div class="chart-card"><span class="chart-no">02</span><h4>⚡ 震度別の内訳</h4><p class="chart-cap">震度が1段階上がるごとに件数は大きく減ります。震度7は全期間でわずか8件。（旧）は1996年9月以前の、弱・強の区分がなかった時代の記録です。</p><div id="chartIntensity"></div></div>
+      <div class="chart-card"><span class="chart-no">03</span><h4>📆 月別の発生件数</h4><p class="chart-cap">地震に季節性はないとされています。棒の高さがおおむね揃っていれば、特定の月に偏っていないことの裏づけになります。件数の少ない条件では偶然の偏りが出やすい点にご注意ください。</p><div id="chartMonth"></div></div>
       <div class="chart-card"><span class="chart-no">04</span><h4>🌙 月相別の発生件数</h4><p class="chart-cap">新月と満月に地震が増えるという説があります。件数だけでなく、その月相が1か月に占める日数の割合と比べて判断してください。</p><div id="chartMoon"></div></div>
       <div class="chart-card"><span class="chart-no">05</span><h4>📊 マグニチュード分布</h4><p class="chart-cap">マグニチュードが0.5上がるごとに件数はおよそ数分の1になります。これは世界中で成り立つ経験則（グーテンベルク・リヒター則）です。</p><div id="chartMag"></div></div>
-      <div class="chart-card"><span class="chart-no">06</span><h4>🗾 地域別 発生件数 TOP12</h4><p class="chart-cap">どの地域で揺れが多いかを示します。プレート境界に近い太平洋側と、活断層の密集地帯が上位に来ます。</p><div id="chartPref"></div></div>
+      <div class="chart-card"><span class="chart-no">06</span><h4>🗾 地域別 発生件数 TOP12</h4><p class="chart-cap">どの地域で揺れが多いかを示します。プレート境界に近い太平洋側と、活断層の密集地帯が上位に来ます。海外は国名で集計しています。</p><div id="chartPref"></div></div>
       <div class="chart-card"><span class="chart-no">07</span><h4>🕯 死者数の多い地震 TOP10</h4><p class="chart-cap">規模の大きさと被害の大きさは必ずしも一致しません。発生時刻、震源の深さ、津波の有無が死者数を大きく左右します。</p><div id="chartDeath"></div></div>
       <div class="chart-card"><span class="chart-no">08</span><h4>🌊 震源の深さ分布</h4><p class="chart-cap">浅い地震ほど地表の揺れが強くなります。深さ100kmを超える深発地震では、震源の真上より遠方が強く揺れることがあります。</p><div id="chartDepth"></div></div>
     </div>
@@ -1713,22 +1749,53 @@ function chartBox(el){
   return { box: box, w: Math.round(w) };
 }
 
-/* --- 縦棒グラフ --- */
+/* --- 縦棒グラフ（はみ出す場合は横スクロール） --- */
+var MIN_SLOT = 10;   /* 1本あたりの最小幅(px)。これを下回るとスクロールに切り替える */
+
+/* ラベルのおおよその表示幅(px)。フォントサイズ10px想定 */
+function labelW(txt){
+  var w = 0, t = String(txt);
+  for(var i=0;i<t.length;i++){
+    var code = t.charCodeAt(i);
+    if(code < 0x0080) w += 5.6;            /* 半角英数記号 */
+    else if(code >= 0xD800 && code <= 0xDBFF){ w += 12; i++; }  /* 絵文字 */
+    else w += 10.2;                         /* 全角 */
+  }
+  return w;
+}
+var chartZoom = 1;
+
 function barChartV(el, items, opt){
   opt = opt || {};
   var cb = chartBox(el), box = cb.box;
   if(!items.length){ box.innerHTML = '<div class="chart-empty">データがありません</div>'; return; }
 
-  var W = cb.w;
-  var H = Math.max(240, Math.min(400, Math.round(W / 3.4)));
-  var PL = 48, PR = 12, PT = 18, PB = items.length > 18 ? 52 : 34;
+  var contW = cb.w;
+  var PL = 48, PR = 12, PT = 18, PB = 34;
+  var natural = (contW - PL - PR) / items.length;
+  var slot = Math.max(natural, MIN_SLOT) * chartZoom;
+
+  /* ラベルを回転させるか、何本おきに出すか */
+  var maxLab = 0;
+  for(var li=0; li<items.length; li++){
+    var lw = labelW(items[li].l);
+    if(lw > maxLab) maxLab = lw;
+  }
+  var rot  = slot < maxLab + 4;
+  var need = rot ? 14 : (maxLab + 8);
+  var step = Math.max(1, Math.ceil(need / slot));
+  if(rot) PB = Math.min(70, Math.round(maxLab * 0.88) + 26);
+
+  var W = Math.round(PL + PR + slot * items.length);
+  if(W < contW) W = contW;
+  var H = Math.max(240, Math.min(380, Math.round(contW / 3.2)));
   var cw = (W - PL - PR) / items.length;
   var max = 0;
   for(var i=0;i<items.length;i++) if(items[i].v > max) max = items[i].v;
   if(max === 0) max = 1;
   var ch = H - PT - PB;
 
-  var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">';
+  var g = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">';
 
   /* 目盛り線 */
   for(var t=0;t<=4;t++){
@@ -1747,21 +1814,27 @@ function barChartV(el, items, opt){
     var col = it.c || opt.color || '#667eea';
     g += '<rect x="' + x + '" y="' + y + '" width="' + bw + '" height="' + bh
        + '" fill="' + col + '" rx="2"><title>' + esc(it.l) + ': ' + it.v + '件</title></rect>';
-    if(it.v > 0 && cw >= 26){
+    if(it.v > 0 && cw >= 26 && (i % step === 0 || i === items.length - 1)){
       g += '<text class="bar-val" x="' + (x+bw/2) + '" y="' + (y-3) + '" text-anchor="middle">' + it.v + '</text>';
     }
-    var rot = (cw < 34);
-    if(rot){
-      g += '<text class="bar-lbl" x="' + (x+bw/2) + '" y="' + (PT+ch+10)
-         + '" text-anchor="end" transform="rotate(-60 ' + (x+bw/2) + ' ' + (PT+ch+10) + ')">'
-         + esc(it.l) + '</text>';
-    }else{
-      g += '<text class="bar-lbl" x="' + (x+bw/2) + '" y="' + (PT+ch+13)
-         + '" text-anchor="middle">' + esc(it.l) + '</text>';
+    var showLab = (i % step === 0) || (i === items.length - 1);
+    if(showLab){
+      if(rot){
+        g += '<text class="bar-lbl" x="' + (x+bw/2) + '" y="' + (PT+ch+11)
+           + '" text-anchor="end" transform="rotate(-60 ' + (x+bw/2) + ' ' + (PT+ch+11) + ')">'
+           + esc(it.l) + '</text>';
+      }else{
+        g += '<text class="bar-lbl" x="' + (x+bw/2) + '" y="' + (PT+ch+13)
+           + '" text-anchor="middle">' + esc(it.l) + '</text>';
+      }
     }
   }
   g += '</svg>';
-  box.innerHTML = g;
+
+  var over = W > contW + 2;
+  box.innerHTML = '<div class="chart-scroll">' + g + '</div>'
+    + (over ? '<div class="scroll-hint">↔ 横にスクロールできます（' + items.length
+              + '項目）。上の「グラフの横幅」でも調整できます</div>' : '');
 }
 
 /* --- 横棒グラフ --- */
@@ -1783,7 +1856,7 @@ function barChartH(el, items, opt){
   if(max === 0) max = 1;
   var bwMax = W - LW - PR;
 
-  var g = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet">';
+  var g = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">';
   for(var i=0;i<items.length;i++){
     var it = items[i];
     var y = i*rowH + 8;
@@ -1799,7 +1872,21 @@ function barChartH(el, items, opt){
        + (opt.unitFmt ? opt.unitFmt(it.v) : it.v) + '</text>';
   }
   g += '</svg>';
-  box.innerHTML = g;
+  box.innerHTML = '<div class="chart-scroll">' + g + '</div>';
+}
+
+/* --- 横幅の拡大縮小 --- */
+var ZOOMS = [0.6, 0.8, 1, 1.4, 2, 3, 4.5];
+function zoomChart(dir){
+  var i = ZOOMS.indexOf(chartZoom);
+  if(i === -1) i = 2;
+  if(dir === 0) i = 2;
+  else i = Math.max(0, Math.min(ZOOMS.length - 1, i + dir));
+  chartZoom = ZOOMS[i];
+  document.getElementById('zLv').textContent = Math.round(chartZoom * 100) + '%';
+  document.getElementById('zOut').disabled = (i === 0);
+  document.getElementById('zIn').disabled  = (i === ZOOMS.length - 1);
+  renderCharts();
 }
 
 /* --- 全グラフの描画 --- */

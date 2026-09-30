@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>グローバル地震マッピングシステム v5.7</title>
+<title>グローバル地震マッピングシステム v5.8</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
@@ -209,7 +209,19 @@ border-radius:9px;padding:12px 14px;
 display:flex;justify-content:space-between;align-items:center;
 padding:8px 0 10px;font-size:13px;font-weight:600;
 }
-.list-scroll{max-height:330px;overflow-y:auto;display:grid;gap:7px}
+.list-scroll{max-height:520px;overflow-y:auto;display:grid;gap:7px;padding-right:4px}
+.list-scroll::-webkit-scrollbar{width:8px}
+.list-scroll::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:99px}
+.more-wrap{display:flex;gap:8px;flex-wrap:wrap;padding:6px 0 2px}
+.btn-more{
+flex:1;min-width:150px;padding:11px 14px;border:1px solid var(--border-color);
+border-radius:8px;background:var(--bg-primary);color:var(--accent);
+font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+}
+.btn-more:hover{border-color:var(--accent);background:var(--bg-secondary)}
+.btn-more.alt{color:var(--text-muted);font-weight:500}
+.btn-more.alt:hover{color:var(--text-primary)}
+.btn-more:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .q-item{
 background:var(--bg-card);border:1px solid var(--border-color);
 border-left-width:4px;border-radius:7px;padding:9px 12px;
@@ -1080,6 +1092,10 @@ var map, cluster;
 var histLayer = null, zoneLayer = null;
 var faultLayer = null, plateLayer = null;
 var chartsVisible = false;
+
+/* 一覧の表示件数（重くならないよう段階的に増やす） */
+var LIST_STEP = 100;
+var listShown = LIST_STEP;
 var markerList = [];    /* filteredData と同じ順のマーカー配列 */
 var filtered = [];
 
@@ -1467,6 +1483,7 @@ function applyFilters(){
     return true;
   });
 
+  listShown = LIST_STEP;
   renderMarkers();
   renderStats();
   renderDropdown();
@@ -1678,9 +1695,9 @@ function renderList(){
     return filtered[b].datetime.localeCompare(filtered[a].datetime);
   });
 
-  var limit = Math.min(order.length, 300);
+  var limit = Math.min(order.length, listShown);
   note.textContent = order.length > limit
-    ? ('新しい順に ' + limit + ' 件を表示中（全 ' + order.length + ' 件）')
+    ? ('新しい順に ' + limit + ' 件を表示中 / 全 ' + order.length + ' 件')
     : ('全 ' + order.length + ' 件を表示中');
 
   for(var k=0;k<limit;k++){
@@ -1712,6 +1729,34 @@ function renderList(){
       box.appendChild(el);
     })(order[k]);
   }
+
+  /* まだ表示していない分がある場合は読み込みボタンを出す */
+  var rest = order.length - limit;
+  if(rest > 0){
+    var more = document.createElement('div');
+    more.className = 'more-wrap';
+    var add = Math.min(rest, LIST_STEP);
+    more.innerHTML =
+      '<button class="btn-more" onclick="showMore(' + LIST_STEP + ')">'
+      + 'さらに ' + add + ' 件を表示（残り ' + rest + ' 件）</button>'
+      + (rest > LIST_STEP
+          ? '<button class="btn-more alt" onclick="showMore(99999)">すべて表示（' + order.length + ' 件）</button>'
+          : '');
+    box.appendChild(more);
+  }else if(order.length > LIST_STEP){
+    var fold = document.createElement('div');
+    fold.className = 'more-wrap';
+    fold.innerHTML = '<button class="btn-more alt" onclick="showMore(0)">先頭 '
+                   + LIST_STEP + ' 件に戻す</button>';
+    box.appendChild(fold);
+  }
+}
+
+/* 一覧の表示件数を増やす（0でリセット、大きな値ですべて表示） */
+function showMore(n){
+  if(n === 0) listShown = LIST_STEP;
+  else listShown = Math.min(filtered.length, listShown + n);
+  renderList();
 }
 
 
